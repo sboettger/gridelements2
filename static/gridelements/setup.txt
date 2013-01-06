@@ -1,0 +1,62 @@
+lib.gridelements.defaultGridSetup { // stdWrap functions being applied to each element
+	columns {
+		default {
+			renderObj = COA
+			renderObj {
+				10 = LOAD_REGISTER
+				20 =< tt_content
+				30 = RESTORE_REGISTER
+			}
+		}
+	}
+}
+
+lib.tt_content.shortcut.pages = COA
+lib.tt_content.shortcut.pages {
+	10 = USER
+	10 {
+		userFunc = tx_gridelements_pi1->user_getTreeList
+    }
+	20 = CONTENT
+	20 {
+		table = tt_content
+		select {
+			pidInList.data = register:pidInList
+			where = colPos >= 0
+			orderBy = colPos,sorting
+			orderBy.dataWrap = FIND_IN_SET(pid,'{register:pidInList}'),|
+		}
+	}
+}
+
+tt_content.shortcut.5 = LOAD_REGISTER
+tt_content.shortcut.5 {
+	tt_content_shortcut_recursive.field = recursive
+}
+
+tt_content.shortcut.20 {
+	0 {
+		tables := addToList(pages)
+		conf.pages < lib.tt_content.shortcut.pages
+	}
+	1 {
+		tables := addToList(pages)
+		conf.pages < lib.tt_content.shortcut.pages
+	}
+}
+
+tt_content.gridelements_pi1 >
+tt_content.gridelements_pi1 = COA
+tt_content.gridelements_pi1 {
+	#10 =< lib.stdheader
+	20 = COA
+	20 {
+		10 = USER
+		10 {
+			userFunc = tx_gridelements_pi1->main
+			setup {
+				default < lib.gridelements.defaultGridSetup
+			}
+		}
+	}
+}
