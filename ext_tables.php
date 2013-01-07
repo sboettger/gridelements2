@@ -137,7 +137,11 @@ t3lib_extMgm::addStaticFile($_EXTKEY, 'static/gridelements/', 'gridelements');
 $TCA['tt_content']['ctrl']['requestUpdate'] .= ',tx_gridelements_container';
 $TCA['tt_content']['ctrl']['typeicons']['gridelements_pi1'] = 'backend_layout.gif';
 $TCA['tt_content']['ctrl']['useColumnsForDefaultValues'] .= ',tx_gridelements_container,tx_gridelements_columns';
-$TCA['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container,tx_gridelements_columns';
+
+	// localize fix. S. http://forge.typo3.org/issues/37878
+// $TCA['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container,tx_gridelements_columns';
+$TCA['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container';
+
 $TCA['tt_content']['ctrl']['typeicon_classes']['gridelements_pi1'] = 'tcarecords-tx_gridelements_backend_layout-default';
 $TCA['tt_content']['ctrl']['typeicon_classes']['gridelements-pi1'] = 'tcarecords-tx_gridelements_backend_layout-default';
 $TCA['tt_content']['types'][$_EXTKEY . '_pi1']['showitem'] = $TCA['tt_content']['types']['text']['showitem'];
@@ -163,6 +167,7 @@ t3lib_extMgm::addPlugin(
 	'CType'
 );
 
+// Hooks
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['tt_content_drawItem'][] = 'EXT:gridelements/lib/class.tx_gridelements_drawitemhook.php:tx_gridelements_drawItemHook';
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms']['db_new_content_el']['wizardItemsHook'][] = 'EXT:gridelements/lib/class.tx_gridelements_wizarditemshook.php:tx_gridelements_wizardItemsHook';
 
@@ -174,6 +179,10 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tceforms.php']['get
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list.inc']['makeQueryArray'][] = 'EXT:gridelements/lib/class.tx_gridelements_dblisthook.php:tx_gridelements_dbListHook';
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'][] = 'EXT:gridelements/lib/class.tx_gridelements_dblistactionshook.php:tx_gridelements_dbListActionsHook';
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tx_templavoila_api']['apiIsRunningTCEmain'] = TRUE;
+
+// XCLASS
+$GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/version/class.tx_version_tcemain.php'] = t3lib_extMgm::extPath('gridelements').'xclass/class.ux_tvxclassversion.php';
+
 
 
 // add JS

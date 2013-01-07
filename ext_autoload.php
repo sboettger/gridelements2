@@ -15,5 +15,6 @@ return array(
 	'tx_gridelements_tt_content' => $extensionPath . 'lib/class.tx_gridelements_tt_content.php',
 	'tx_gridelements_wizarditemshook' => $extensionPath . 'lib/class.tx_gridelements_wizarditemshook.php',
 	'tx_gridelements_pi1' => $extensionPath . 'pi1/class.tx_gridelements_pi1.php',
+	'ux_tvxclassversion.php' => $extensionPath . 'xclass/class.ux_tvxclassversion.php',
 );
 ?>

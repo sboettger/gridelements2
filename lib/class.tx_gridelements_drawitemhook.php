@@ -83,7 +83,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 		}
 
 		// if we got a selected backend layout, we have to create the layout table now
-		if ($layoutUid && !$parentObject->tt_contentConfig['languageMode'] && isset($layoutSetup['config'])) {
+		if ($layoutUid && isset($layoutSetup['config'])) {
 			$itemContent = $this->renderGridLayoutTable($layoutSetup, $row, $head, $gridContent);
 		} else {
 			$itemContent = '<div class="t3-gridContainer">';

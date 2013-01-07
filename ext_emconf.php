@@ -11,7 +11,7 @@
 ########################################################################
 
 $EM_CONF[$_EXTKEY] = array(
-	'title' => 'Grid Elements',
+	'title' => 'Grid Elements (typovision version)',
 	'description' => 'This extension integrates the grid layout concept also to regular content elements - the grid elements.
 This approach is an alternative to TemplaVoila to store relations normalized in the database without using XML.',
 	'category' => 'be',
@@ -28,7 +28,7 @@ This approach is an alternative to TemplaVoila to store relations normalized in 
 	'modify_tables' => 'tt_content',
 	'clearcacheonload' => 0,
 	'lockType' => '',
-	'author' => 'Jo Hasenau, Rocco Georgi',
+	'author' => 'Jo Hasenau, Rocco Georgi, Martin R. Krause, Sebastian Boettger',
 	'author_email' => 'info@cybercraft.de, rocco@pavingways.com',
 	'author_company' => '',
 	'CGLcompliance' => '',

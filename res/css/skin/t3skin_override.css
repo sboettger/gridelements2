@@ -7,6 +7,10 @@ td.t3-page-column {
 	min-width: 0px!important;
 }
 
+table.typo3-page-langMode {
+    width: 100%!important;
+}
+
 .exampleContent .t3-page-colHeader {
 	background-color: #c8c8c8;
 	background-image: linear-gradient(center top, #f6f6f6 10%, #c8c8c8 90%);

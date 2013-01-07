@@ -12,6 +12,33 @@ class tx_gridelements_TCEmainHook {
 
 	protected $layoutSetup;
 
+
+	/**
+	 * Add processed record to actionOnGridElement array for later after processing
+	 * of tx_gridelements_container fields
+	 *
+	 * @author Martin R. Krause, martin.r.krause@gmx.de
+	 *
+	 * @param $status
+	 * @param $table
+	 * @param $id
+	 * @param $fieldArray
+	 * @param $parentObj
+	 * @return void
+	 */
+	public function processDatamap_afterDatabaseOperations($status, $table, $id, $fieldArray, &$parentObj) {
+
+		if (!is_array($GLOBALS['actionOnGridElement'])) $GLOBALS['actionOnGridElement'] = array();
+
+			// store record for gridelements post processing after process_cmdmap
+		if ($fieldArray['CType'] == 'gridelements_pi1') {
+			$GLOBALS['actionOnGridElement'][] = array(
+				'table' => $table,
+				'id' => $parentObj->substNEWwithIDs[$id],
+				'value' => $fieldArray['sys_language_uid']);
+		}
+	}
+
 	/**
 	 * Function to set the colPos of an element depending on
 	 * whether it is a child of a parent container or not
@@ -30,7 +57,7 @@ class tx_gridelements_TCEmainHook {
 	 */
 	public function processDatamap_preProcessFieldArray(&$fieldArray, $table, $id, &$parentObj) {
 
-        if (($table == 'tt_content' || $table == 'pages') && !$parentObj->isImporting) {
+		if (($table == 'tt_content' || $table == 'pages') && !$parentObj->isImporting) {
 
 	        $this->layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup', $id);
 
@@ -105,6 +132,23 @@ class tx_gridelements_TCEmainHook {
                     $fieldArray['colPos'] = $this->checkForRootColumn(intval($id));
                     $fieldArray['tx_gridelements_columns'] = 0;
                 }
+
+	                // localize fix. S. http://forge.typo3.org/issues/37878
+									//
+		              // is localize?
+		            $cmd = t3lib_div::_GP('cmd');
+		            $localize = intval($cmd['tt_content'][$fieldArray['tx_gridelements_container']]['localize']);
+		            $orignalUid = intval($fieldArray['t3_origuid']);
+		            if($localize && $orignalUid) {
+			            $originalColumn = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
+				            'tx_gridelements_columns',
+				            'tt_content',
+					            'uid=' . $orignalUid
+			            );
+			            if(!empty($originalColumn['tx_gridelements_columns'])) {
+				            $fieldArray['tx_gridelements_columns'] = $originalColumn['tx_gridelements_columns'];
+			            }
+		            }
 
             }
         }
@@ -192,18 +236,18 @@ class tx_gridelements_TCEmainHook {
 	 */
 	public function moveRecord($table, $uid, &$destPid, &$propArr, &$moveRec, $resolvedPid, &$recordWasMoved, &$parentObj) {
 
-		if ($table == 'tt_content' && !$parentObj->isImporting) {
-			$cmd = t3lib_div::_GET('cmd');
-			$originalElement = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-				'*',
-				'tt_content',
-				'uid=' . $uid
-			);
+	  $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_columns';
+	  if ($table == 'tt_content' && !$parentObj->isImporting) {			$cmd = t3lib_div::_GET('cmd');
+  		$originalElement = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
+      	'*',
+         'tt_content',
+         'uid=' . $uid
+      );
 
-			$containerUpdateArray[] = $originalElement['tx_gridelements_container'];
+      $containerUpdateArray[] = $originalElement['tx_gridelements_container'];
 
 			if (strpos($cmd['tt_content'][$uid]['move'], 'x') !== false) {
-				$target = t3lib_div::trimExplode('x', $cmd['tt_content'][$uid]['move']);
+        $target = t3lib_div::trimExplode('x', $cmd['tt_content'][$uid]['move']);
 				$targetUid = abs(intval($target[0]));
 
 				if ($targetUid != $uid && intval($target[0]) < 0) {
@@ -231,25 +275,23 @@ class tx_gridelements_TCEmainHook {
 				$parentObj->updateDB('tt_content', $uid, $updateArray);
 				$this->doGridContainerUpdate($containerUpdateArray, $parentObj);
 			} else if($cmd['tt_content'][$uid]['move']) {
-				// to be done: handle moving with the up and down arrows via list module correctly
+       // to be done: handle moving with the up and down arrows via list module correctly
 
 				/* $destPid = -$uid;
 				$parentObj->updateDB('tt_content', $uid, $updateArray);
 				$this->doGridContainerUpdate($containerUpdateArray, $parentObj);*/
 			} else if(!count($cmd) && !$parentObj->moveChildren) {
-				// pasting into the page via list module without knowing the desired column
-
 				if($originalElement['CType'] == 'gridelements_pi1') {
 					$parentObj->moveChildren = true;
 				}
 
 				$updateArray = array(
-					'colPos' => 0,
-					'sorting' => 0,
-					'tx_gridelements_container' => 0,
-					'tx_gridelements_columns' => 0
-				);
-				$parentObj->updateDB('tt_content', $uid, $updateArray);
+            'colPos' => 0,
+            'sorting' => 0,
+            'tx_gridelements_container' => 0,
+            'tx_gridelements_columns' => 0
+        );
+        $parentObj->updateDB('tt_content', $uid, $updateArray);
 				$this->doGridContainerUpdate($containerUpdateArray, $parentObj);
 			}
 
@@ -531,56 +573,110 @@ class tx_gridelements_TCEmainHook {
 		$containerUpdateArray = array();
 
 		if ($command == 'copy' &&
-		    ($DDcopy == 1 || $reference == 1) &&
 		    !$commandIsProcessed &&
 		    $table == 'tt_content' &&
 		    !$parentObj->isImporting
 		) {
 
+		 $copyAfterDuplFields = $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'];
+     $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_columns';
+
 			$overrideArray = array();
+      if($DDcopy == 1 || $reference == 1) {
 
-			if($reference == 1) {
-				t3lib_div::loadTCA('tt_content');
-				foreach($GLOBALS['TCA']['tt_content']['columns'] as $key => $column) {
-					if(strpos(',' . $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] . ',', ',' . $key . ',') === FALSE) {
-						$overrideArray[$key] = '';
-					}
-				}
-				$overrideArray['CType'] = 'shortcut';
-				$overrideArray['records'] = $id;
-				$overrideArray['header'] = 'Reference';
-			}
-			
-			if (strpos($value, 'x') !== false) {
-				$valueArray = t3lib_div::trimExplode('x', $value);
-				$overrideArray['sorting'] = 0;
+      	$overrideArray = array();
 
-				if ((intval($valueArray[0]) > 0 && $valueArray[1] != '') || (abs($valueArray[0]) == $id)) {
-					$overrideArray['tx_gridelements_container'] = 0;
-					$overrideArray['tx_gridelements_columns'] = 0;
-					$overrideArray['colPos'] = intval($valueArray[1]);
-				} else if ($valueArray[1] != '') {
-					$containerUpdateArray[] = abs($valueArray[0]);
-					$overrideArray['colPos'] = -1;
-					$overrideArray['tx_gridelements_container'] = abs($valueArray[0]);
-					$overrideArray['tx_gridelements_columns'] = intval($valueArray[1]);
+				if($reference == 1) {
+				    t3lib_div::loadTCA('tt_content');
+				    foreach($GLOBALS['TCA']['tt_content']['columns'] as $key => $column) {
+				        if(strpos(',' . $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] . ',', ',' . $key . ',') === FALSE) {
+				            $overrideArray[$key] = '';
+				        }
+				    }
+				    $overrideArray['CType'] = 'shortcut';
+				    $overrideArray['records'] = $id;
+				    $overrideArray['header'] = 'Reference';
 				}
 
-				$parentObj->copyRecord($table, $id, intval($valueArray[0]), 1, $overrideArray);
-				if(count($containerUpdateArray) > 0) {
-				    $this->doGridContainerUpdate($containerUpdateArray, $parentObj);
-				}
+				if (strpos($value, 'x') !== false) {
+        	$valueArray = t3lib_div::trimExplode('x', $value);
+          $overrideArray['sorting'] = 0;
 
-			} else {
-				$parentObj->copyRecord($table, $id, $value, 1, $overrideArray);
-			}
+	        if ((intval($valueArray[0]) > 0 && $valueArray[1] != '') || (abs($valueArray[0]) == $id)) {
+              $overrideArray['tx_gridelements_container'] = 0;
+              $overrideArray['tx_gridelements_columns'] = 0;
+              $overrideArray['colPos'] = intval($valueArray[1]);
+          } else if ($valueArray[1] != '') {
+              $containerUpdateArray[] = abs($valueArray[0]);
+              $overrideArray['colPos'] = -1;
+              $overrideArray['tx_gridelements_container'] = abs($valueArray[0]);
+              $overrideArray['tx_gridelements_columns'] = intval($valueArray[1]);
+          }
+					$parentObj->copyRecord($table, $id, intval($valueArray[0]), 1, $overrideArray);
+ 	        if(count($containerUpdateArray) > 0) {
+              $this->doGridContainerUpdate($containerUpdateArray, $parentObj);
+          }
 
-			$commandIsProcessed = true;
+        } else {
+            $parentObj->copyRecord($table, $id, $value, 1, $overrideArray);
+        }
+	    } else {
+	        $parentObj->copyRecord($table, $id, $value, 1);
+	    }
 
-		}
+	    $commandIsProcessed = true;
+
+      $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] = $copyAfterDuplFields;
+ 		}
 
 	}
 
+	/**
+	 * Process all grid elements that have been copied or created in workspace.
+	 * Adjuste tx_gridelement_container to proper values for versions and placeholders
+	 *
+	 * Hook for t3lib_tcemain l. 2542
+	 *
+	 * @author: Martin R. Krause, martin.r.krause@gmx.de
+	 * @access: public
+	 *
+	 * @param $parentObj
+	 * @return void
+	 */
+	public function processCmdmap_afterFinish(&$parentObj) {
+
+		foreach ($GLOBALS['actionOnGridElement'] as $action) {
+			$placeHolderRecord = t3lib_BEfunc::getRecord($action['table'], $action['id']);
+
+			if (strlen(strval($action['value'])) == 0) $action['value'] = $placeHolderRecord['sys_language_uid'];
+
+			// we only care about gridelements on workspaces
+			if ($placeHolderRecord['CType'] == 'gridelements_pi1' && $parentObj->BE_USER->workspace > 0) {
+
+				$versionRecord = t3lib_BEfunc::getRecordsByField($action['table'], 't3ver_oid', $placeHolderRecord['uid'], 'AND pid < 0 AND sys_language_uid = ' . $action['value']);
+				$versionRecord = $versionRecord[0];
+
+				if (is_array($versionRecord)) {
+					$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
+						'uid, pid, tx_gridelements_container, tx_gridelements_columns',
+						$action['table'],
+							'l18n_parent in (select uid from ' . $action['table'] . ' where tx_gridelements_container = ' . $placeHolderRecord['l18n_parent'] . ')'
+					);
+					$rows = array();
+					while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
+						$rows[] = $row;
+					}
+					$GLOBALS['TYPO3_DB']->sql_free_result($res);
+
+					foreach ($rows as $cElement) {
+						$updateArray = array('tx_gridelements_container' => $placeHolderRecord['uid']);
+						$GLOBALS['TYPO3_DB']->exec_UPDATEquery($action['table'], 'uid = ' . $cElement['uid'], $updateArray);
+					}
+				}
+			}
+		}
+		unset($GLOBALS['actionOnGridElement']);
+	}
 }
 
 
