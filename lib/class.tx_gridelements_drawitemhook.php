@@ -26,15 +26,16 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 
 		if($row['CType']) {
 
-			$drawItem = FALSE;
 			$showHidden = $parentObject->tt_contentConfig['showHidden'] ? '' : t3lib_BEfunc::BEenableFields('tt_content');
 			$deleteClause = t3lib_BEfunc::deleteClause('tt_content');
 
 			switch($row['CType']) {
 				case 'gridelements_pi1':
+                    $drawItem = FALSE;
 					$itemContent .= $this->renderCTypeGridelements($parentObject, $row, $showHidden, $deleteClause);
 				break;
 				case 'shortcut':
+                    $drawItem = FALSE;
 					$itemContent .= $this->renderCTypeShortcut($parentObject, $row, $showHidden, $deleteClause);
 				break;
 			}
