@@ -9,17 +9,14 @@
 }
 .x-dd-droptargetarea {
 	visibility: hidden;
-	margin-top: -8px;
-	height: 9px;
-	color: black;
+	color: #9c8c2c;
+	background-color: #fefecb;
 	text-align: center;
-	line-height: 8px;
-	font-size: 9px;
 	position: relative;
+	margin: 2px 0;
+	border: 1px dotted #dfc054;
 }
 .x-dd-droptargetarea.x-dd-showdroptarget {
-	background: #f6D4ac;
-	color: black;
 	visibility: visible;
 }
 .x-dd-droptargetarea.x-dd-showdroptarget.x-dd-overdroparea {

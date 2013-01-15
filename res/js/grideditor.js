@@ -360,7 +360,7 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 			var fieldName = new Ext.form.TextField({
 				fieldLabel: TYPO3.lang.name,
 				name: 'name',
-				width: 270,
+				width: 260,
 				value: cell.name,
 				tabIndex: 1,
 				listeners: {
@@ -378,7 +378,7 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 				name: 'column',
 				width: 50,
 				value: cell.column,
-				tabIndex: 2,
+				tabIndex: 1,
 				listeners: {
 					render: function(c) {
 						Ext.QuickTips.register({
@@ -389,14 +389,20 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 				}
 			});
 
-			var fieldAllowed = new Ext.form.TextField({
-				fieldLabel: TYPO3.lang.allowedElementTypes,
-				name: 'allowed',
-				width: 270,
-				value: cell.allowed,
-				tabIndex: 1,
+			var fieldAllowed = new Ext.Component({
+				renderTo: Ext.getBody(),
+				name: 'selectAllowed',
+				fieldLabel: TYPO3.lang['tx_gridelements_js.allowedElementTypes'],
+				tabIndex: 2,
+				style: 'width:260px;height:200px;',
+				autoEl: {
+					tag:'select',
+					cls:'x-font-select',
+					multiple: 'multiple',
+					html: this.getCTypeOptions(cell.allowed)
+				},
 				listeners: {
-					render: function(c) {
+					render: function(c){
 						Ext.QuickTips.register({
 							target: c,
 							text: TYPO3.lang.allowedElementTypesHelp
@@ -404,7 +410,6 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 					}
 				}
 			});
-
 
 			win = new Ext.Window({
 				layout: 'fit',
@@ -432,7 +437,7 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 						text: TYPO3.lang.save,
 						handler: function(fieldName, fieldColumn, fieldAllowed, col, row) {
 							t3Grid.setName(fieldName.getValue(), col, row);
-							t3Grid.setAllowed(fieldAllowed.getValue(), col, row);
+							t3Grid.setAllowed(t3Grid.getSelectedOptions(fieldAllowed), col, row);
 							t3Grid.setColumn(fieldColumn.getValue(), col, row);
 							win.close();
 							t3Grid.drawTable();
@@ -441,7 +446,70 @@ TYPO3.Backend.t3Grid = Ext.extend(Ext.Component, {
 				]
 			});
 		}
+
 		win.show(this);
+	},
+
+	/**
+	 * Returns html for allowed ctype selection.
+	 *
+	 * @param selectedOptions string (csv)
+	 * return string
+	 */
+	getCTypeOptions: function(selectedCTypesCSV) {
+		var allowedCTypeOptions = [];
+
+		var selectedCTypes = [];
+		if(selectedCTypesCSV){
+			var selectedCTypes = selectedCTypesCSV.split(',');
+		}
+
+		for (var i = 0; i < TYPO3.Backend.availableCTypes.length; i++) {
+			var ctypeKey = TYPO3.Backend.availableCTypes[i],
+				ctypeIcon = TYPO3.Backend.availableCTypeIcons[i],
+				ctypeLabel = TYPO3.lang[ctypeKey],
+				ctypeSelected = this.inArray(ctypeKey, selectedCTypes),
+				ctypeStyle = 'background: #fff url(' + ctypeIcon + ') 0% 50% no-repeat; height: 16px; padding: 2px 10px 0 22px;'
+
+			allowedCTypeOptions.push('<option value="' + ctypeKey + '" style="' + ctypeStyle + '"' + (ctypeSelected ? ' selected="selected"' : '') + '>' + ctypeLabel + '</option>');
+		}
+
+		return allowedCTypeOptions.join('');
+	},
+
+	/**
+	 * Returns csv string of selected values from allowedCE-SELECT.
+	 *
+	 * @param selectElement object
+	 * return string
+	 */
+	getSelectedOptions: function(selectElement){
+		var selectedOptions = [];
+
+		var options = selectElement.getEl().select('option').elements;
+		Ext.each(options, function(option){
+			if(Ext.get(option).dom.selected ){
+				selectedOptions.push(Ext.get(option).getAttribute('value'));
+			}
+		});
+
+		return selectedOptions.join(',');
+	},
+
+	/**
+	 * Traverses the array values and looks for needle.
+	 * Returns index of found value, else false
+	 *
+	 * @param col integer The value to look for
+	 * @param row integer The array to look in
+	 * return int
+	 */
+	inArray: function(needle, haystack) {
+		var length = haystack.length;
+		for(var i = 0; i < length; i++) {
+			if(haystack[i] == needle) return true;
+		}
+		return false;
 	},
 
 	/**

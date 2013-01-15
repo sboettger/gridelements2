@@ -102,6 +102,7 @@ $tempColumns = array(
 			),
 			'foreign_table' => 'tt_content',
 			'foreign_table_where' => '
+				AND tt_content.sys_language_uid = ###REC_FIELD_sys_language_uid###
 				AND tt_content.pid=###CURRENT_PID###
 				AND tt_content.CType=\'gridelements_pi1\'
 				AND NOT tt_content.uid=###THIS_UID###
@@ -141,12 +142,14 @@ $TCA['tt_content']['ctrl']['useColumnsForDefaultValues'] .= ',tx_gridelements_co
 	// localize fix. S. http://forge.typo3.org/issues/37878
 // $TCA['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container,tx_gridelements_columns';
 $TCA['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container';
+$TCA['tt_content']['ctrl']['keepFields'] .= 'tx_gridelements_backend_layout,tx_gridelements_children,tx_gridelements_container,tx_gridelements_columns';
 
 $TCA['tt_content']['ctrl']['typeicon_classes']['gridelements_pi1'] = 'tcarecords-tx_gridelements_backend_layout-default';
 $TCA['tt_content']['ctrl']['typeicon_classes']['gridelements-pi1'] = 'tcarecords-tx_gridelements_backend_layout-default';
 $TCA['tt_content']['types'][$_EXTKEY . '_pi1']['showitem'] = $TCA['tt_content']['types']['text']['showitem'];
 
-$TCA['tt_content']['columns']['colPos']['config']['itemsProcFunc'] = 'EXT:gridelements/lib/class.tx_gridelements_colposlist.php:tx_gridelements_colposlist->itemsProcFunc';
+$TCA['tt_content']['columns']['colPos']['config']['itemsProcFunc'] = 'EXT:gridelements/lib/itemsprocfuncs/class.tx_gridelements_itemsprocfunc_colposlist.php:tx_gridelements_itemsprocfunc_colposlist->itemsProcFunc';
+$TCA['tt_content']['columns']['CType']['config']['itemsProcFunc'] = 'EXT:gridelements/lib/itemsprocfuncs/class.tx_gridelements_itemsprocfunc_ctypelist.php:tx_gridelements_itemsprocfunc_ctypelist->itemsProcFunc';
 $TCA['tt_content']['columns']['pi_flexform']['config']['ds']['*,gridelements_pi1'] = '';
 $TCA['tt_content']['columns']['records']['config']['allowed'] .= ',pages';
 t3lib_extMgm::addToAllTCAtypes('tt_content', 'recursive', 'shortcut', 'after:records');
@@ -170,23 +173,21 @@ t3lib_extMgm::addPlugin(
 // Hooks
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['tt_content_drawItem'][] = 'EXT:gridelements/lib/class.tx_gridelements_drawitemhook.php:tx_gridelements_drawItemHook';
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms']['db_new_content_el']['wizardItemsHook'][] = 'EXT:gridelements/lib/class.tx_gridelements_wizarditemshook.php:tx_gridelements_wizardItemsHook';
-
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass'][] = 'EXT:gridelements/lib/class.tx_gridelements_tcemainhook.php:tx_gridelements_TCEmainHook';
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] = 'EXT:gridelements/lib/class.tx_gridelements_tcemainhook.php:tx_gridelements_TCEmainHook';
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['moveRecordClass'][] = 'EXT:gridelements/lib/class.tx_gridelements_tcemainhook.php:tx_gridelements_TCEmainHook';
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tceforms.php']['getSingleFieldClass'][] = 'EXT:gridelements/lib/class.tx_gridelements_tceformshook.php:tx_gridelements_TCEformsHook';
 
-$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list.inc']['makeQueryArray'][] = 'EXT:gridelements/lib/class.tx_gridelements_dblisthook.php:tx_gridelements_dbListHook';
-$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'][] = 'EXT:gridelements/lib/class.tx_gridelements_dblistactionshook.php:tx_gridelements_dbListActionsHook';
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tx_templavoila_api']['apiIsRunningTCEmain'] = TRUE;
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-preProcess'][] = 'EXT:gridelements/hooks/class.tx_gridelements_pagerendererhook.php:tx_gridelements_pagerendererhook->addJSCSS';
+
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list.inc']['makeQueryArray'][] = 'EXT:gridelements/hooks/class.tx_gridelements_db_listhook.php:tx_gridelements_db_listHook';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'][] = 'EXT:gridelements/hooks/class.tx_gridelements_db_list_extrahook.php:tx_gridelements_db_list_extraHook';
 
 // XCLASS
 $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/version/class.tx_version_tcemain.php'] = t3lib_extMgm::extPath('gridelements').'xclass/class.ux_tvxclassversion.php';
+$GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['typo3/class.db_list_extra.inc'] = t3lib_extMgm::extPath('gridelements').'xclass/class.ux_db_list_extra.php';
 
-
-
-// add JS
-$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-preProcess'][] = 'EXT:gridelements/lib/class.tx_gridelements_addjavascript.php:tx_gridelements_addjavascript->addJS';
 
 $GLOBALS['TYPO3_USER_SETTINGS']['columns']['dragAndDropHideNewElementWizardInfoOverlay'] = array(
 	'type' => 'check',
@@ -198,7 +199,12 @@ $GLOBALS['TYPO3_USER_SETTINGS']['columns']['hideColumnHeaders'] = array(
 	'label' => 'LLL:EXT:gridelements/locallang_db.xml:hideColumnHeaders'
 );
 
-$GLOBALS['TYPO3_USER_SETTINGS']['showitem'] .= ',--div--;LLL:EXT:gridelements/locallang_db.xml:gridElements,dragAndDropHideNewElementWizardInfoOverlay,hideColumnHeaders';
+$GLOBALS['TYPO3_USER_SETTINGS']['columns']['hideContentPreview'] = array(
+	'type' => 'check',
+	'label' => 'LLL:EXT:gridelements/locallang_db.xml:hideContentPreview'
+);
+
+$GLOBALS['TYPO3_USER_SETTINGS']['showitem'] .= ',--div--;LLL:EXT:gridelements/locallang_db.xml:gridElements,dragAndDropHideNewElementWizardInfoOverlay,hideColumnHeaders,hideContentPreview';
 
 $TBE_STYLES['skins']['gridelements']['name'] = 'gridelements';
 $TBE_STYLES['skins']['gridelements']['stylesheetDirectories']['structure'] = 'EXT:' . ($_EXTKEY) . '/res/css/skin/';

@@ -77,10 +77,33 @@ class SC_wizard_gridelements_backend_layout {
 			'notSet' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_notSet', 1),
 			'nameHelp' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_nameHelp', 1),
 			'columnHelp' => $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_wizards.xml:grid_columnHelp', 1),
+			'allowedElementTypes' => $GLOBALS['LANG']->sL('LLL:EXT:gridelements/locallang_db.xml:allowedElementTypes', 1),
+			'allowedElementTypesHelp' => $GLOBALS['LANG']->sL('LLL:EXT:gridelements/locallang_db.xml:allowedElementTypesHelp', 1),
+
 		);
 		$pageRenderer->addInlineLanguageLabelArray($languageLabels);
 
-		// select record
+		// add gridelement wizard options information
+		$ctypeLabels = array();
+		$ctypeIcons = array();
+		foreach($GLOBALS['TCA']['tt_content']['columns']['CType']['config']['items'] as $item){
+			$itemKey = $item[1];
+			if(substr($itemKey, 0, 2) !== '--'){
+				$ctypeLabels[$itemKey] = $GLOBALS['LANG']->sL($item[0], 1);
+				if(strstr($item[2], '/typo3')){
+					$ctypeIcons[$itemKey] = '../../../' . $item[2];
+				}else{
+					$ctypeIcons[$itemKey] = '../../../' . '../typo3/sysext/t3skin/icons/gfx/' . $item[2];
+				}
+			}
+		}
+		$pageRenderer->addInlineLanguageLabelArray($ctypeLabels);
+		$pageRenderer->addJsInlineCode('availableCTypes', '
+			TYPO3.Backend.availableCTypes = ["' . join('","', array_keys($ctypeLabels)) . '"];
+			TYPO3.Backend.availableCTypeIcons = ["' . join('","', $ctypeIcons) . '"];
+		');
+
+			// select record
 		$record = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows($this->P['field'], $this->P['table'], 'uid=' . intval($this->P['uid']));
 
 		if (trim($record[0][$this->P['field']]) == '') {
@@ -293,5 +316,4 @@ $SOBE = t3lib_div::makeInstance('SC_wizard_gridelements_backend_layout');
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
-
 ?>

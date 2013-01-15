@@ -5,83 +5,109 @@
 td.t3-page-column {
 	max-width: none!important;
 	min-width: 0px!important;
+	padding: 0 10px 3px;
 }
 
 table.typo3-page-langMode {
     width: 100%!important;
 }
 
-.exampleContent .t3-page-colHeader {
-	background-color: #c8c8c8;
-	background-image: linear-gradient(center top, #f6f6f6 10%, #c8c8c8 90%);
-	background-image: -moz-linear-gradient(center top, #f6f6f6 10%, #bdbcbc 90%);
-	background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, color-stop(0.1, #f6f6f6), color-stop(0.9, #c8c8c8));
-	visibility: visible!important;
-	color: #5B5B5B;
-	border-top:  1px solid #CCC;
-	border-right:  1px solid #999;
-	border-bottom:  1px solid #999;
-	border-left:  1px solid #CCC;
-	padding-right: 7px;
+td.t3-gridCell-restricted,
+td.t3-gridCell-unassigned {
+	opacity: 0.4;
+	filter: alpha(opacity=40);
+	background-color: transparent;
 }
 
-.exampleContent .t3-page-colHeader-icons {
-	display: none;
+td.t3-gridCell-restricted div.t3-row-header,
+td.t3-gridCell-unassigned div.t3-row-header {
+	opacity: 1;
 }
 
-.exampleContent .t3-page-colHeader:hover .t3-page-colHeader-icons {
-	display: block;
+td.t3-gridCell-restricted div.t3-row-header div,
+td.t3-gridCell-unassigned div.t3-row-header div {
+	opacity: 1;
 }
 
-.exampleContent .t3-page-colHeader:hover {
+.t3-dd-spacer {
+	height: 20px;
+}
+
+.t3-page-colHeader-icons {
+	position: relative;
+	left: 2px;
+}
+
+.t3-page-colHeader {
+	border-bottom: 1px solid #5B5B5B;
+	color: #aaaaaa !important;
+	font-family: Verdana,sans-serif;
+	font-size: 13px;
+	padding-left: 0;
+	padding-right: 0;
+	min-width: 150px;
+}
+
+.t3-page-ce .t3-page-ce-header-active {
 	background-color:#5b5b5b;
 	background-image:linear-gradient(center top,#7f7f7f 10%,#5b5b5b 100%);
 	background-image:-moz-linear-gradient(center top,#7f7f7f 10%,#5b5b5b 100%);
 	background-image:-webkit-gradient(linear,0% 0%,0% 100%,color-stop(0.1,#7f7f7f),color-stop(1,#5b5b5b));
-	background-repeat:repeat-x;
-	color: #fff;
-	border-top:  1px solid #999;
-	border-right:  1px solid #CCC;
-	border-bottom:  1px solid #CCC;
-	border-left:  1px solid #999;
 }
 
-.active .t3-page-ce .t3-row-header {
+.t3-row-header {
+	background-color: inherit;
+	background-image: inherit
+}
+
+.t3-page-ce .t3-row-header {
 	visibility: hidden;
+}
+
+.t3-page-ce.active .t3-row-header {
+	visibility: hidden;
+}
+
+.t3-page-ce .t3-page-colHeader {
+	visibility: visible !important;
+}
+
+.t3-page-ce .t3-page-ce-header-active .t3-row-header {
+	visibility: visible;
+}
+
+.t3-page-ce .t3-page-ce-header-active .t3-page-ce .t3-row-header {
+	visibility: hidden;
+}
+
+.t3-page-ce-body-active {
+	border-color: #5B5B5B !important;
 }
 
 .active .t3-page-ce .t3-page-ce-body {
-	border-color: #EDEDED;
+	border-color: #E2E2E2;
 }
 
-.active .active .t3-page-ce-body {
-	border-color: #5B5B5B;
+.t3-page-ce {
+	padding: 0 0px !important;
+	margin-bottom: 0px;
 }
 
-.active .active .t3-row-header {
-	visibility: visible;
+.t3-page-colHeader {
+	margin-top: 5px;
+	margin-bottom: 0px;
 }
 
-.active .active .t3-page-ce .t3-row-header {
-	visibility: hidden;
+.active .exampleContent .t3-page-colHeader {
+	xbackground-color:#5b5b5b;
+	xbackground-image:inherit;
 }
 
-.active .active .active .t3-row-header {
-	visibility: visible;
-}
-
-.active .active .active .t3-page-ce .t3-row-header {
-	visibility: hidden;
-}
-
-.active .active .active .active .t3-row-header {
-	visibility: visible;
-}
 
 .t3-page-colHeader-label {
 	white-space: nowrap;
 	text-align: left;
-	margin-left: 65px;
+	margin: 0 40px 0 85px;
 }
 
 .t3-gridContainer--1 {
@@ -188,15 +214,6 @@ table.typo3-page-langMode {
 	margin-left: 1px!important;
 }
 
-/*.t3-page-column--2 .exampleContent {
-	display: none;
-}
-
-.t3-icon-tx_gridelements_backend_layout-default {
-	width: 24px;
-	height: 24px;
-}*/
-
 .exampleContent .reference {
 	position: relative;
 }
@@ -227,3 +244,38 @@ table.typo3-page-langMode {
 	opacity: 1;
 }
 
+.t3-gridCell-invisibleContent .t3-page-ce {
+    display: none!important;
+}
+
+.t3-gridCell-invisibleContent .t3-page-colHeader {
+    opacity: 0.5;
+}
+
+.t3-page-colHeader a.toggle-up {
+    display: block;
+    position: absolute;
+    right: 0px;
+}
+
+.t3-page-colHeader a.toggle-down {
+    display: none;
+    position: absolute;
+    right: 0px;
+}
+
+.t3-gridCell-invisibleContent .t3-page-colHeader a.toggle-up {
+    display: none;
+}
+
+.t3-gridCell-invisibleContent .t3-page-colHeader a.toggle-down {
+    display: block;
+}
+
+/* we replace the t3skin sprite with one that also contains gridelement icons */
+.t3-icon-actions {
+	background-image: url('../../img/t3skin-ge-icons.png?4') !important;
+}
+.t3-icon-copyfrompage {
+	background-position: -0px -340px !important;
+}

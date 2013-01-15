@@ -11,4 +11,7 @@ t3lib_extMgm::addPageTSConfig('
 ');
 
 t3lib_extMgm::addPItoST43($_EXTKEY, 'pi1/class.tx_gridelements_pi1.php', '_pi1', 'CType', 1);
-?>
+
+// register BE AJAX controller
+$TYPO3_CONF_VARS['BE']['AJAX']['tx_gridelements::controller'] =
+	t3lib_extMgm::extPath($_EXTKEY) . 'lib/class.tx_gridelements_ajax.php:tx_gridelements_ajax->init';

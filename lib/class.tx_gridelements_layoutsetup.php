@@ -1,4 +1,26 @@
 <?php
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 2013 Arno Dudek <webmaster@adgrafik.at>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
 /**
  * Utilities for gridelements.
@@ -7,38 +29,58 @@
  * @package		TYPO3
  * @subpackage	tx_gridelements
  */
-class tx_gridelements_layoutsetup implements t3lib_Singleton {
+class tx_gridelements_layoutsetup {
 
-	protected $layoutSetup;
-
+	protected $layoutSetup = array();
 	protected $typoScriptSetup;
-
 	protected $flexformConfigurationPathAndFileName = 'EXT:gridelements/res/flexform/default_flexform_configuration.xml';
 
 	/**
-	 * Returns the grid layout setup.
+	 * Load page TSconfig
 	 *
 	 * @param integer $pageId: The current page ID
 	 * @param array $typoScriptSetup: The PlugIn configuration
+	 * @return tx_gridelements_layoutsetup
 	 */
-	public function __construct($pageId, $typoScriptSetup = array()) {
-
+	public function init($pageId, $typoScriptSetup = array()) {
 		$pageId = (strpos($pageId, 'NEW') === 0) ? 0 : $pageId;
-
-		// Load page TSconfig
 		$this->loadLayoutSetup($pageId);
-		$this->typoScriptSetup = $typoScriptSetup;
+		foreach($this->layoutSetup as $key => $setup) {
+			$columns = $this->getLayoutColumns($key);
+			if($columns['allowed']) {
+				$this->layoutSetup[$key]['columns'] = $columns;
+				$this->layoutSetup[$key]['allowed'] = $columns['allowed'];
+			}
+		}
+		$this->setTypoScriptSetup($typoScriptSetup);
+		return $this;
+	}
 
+	/**
+	 * setter for layout setup
+	 *
+	 * @param array $layoutSetup
+	 */
+	public function setLayoutSetup($layoutSetup) {
+		$this->layoutSetup = $layoutSetup;
+	}
+
+	/**
+	 * setter for layout setup
+	 *
+	 * @param array $layoutSetup
+	 */
+	public function setTypoScriptSetup($typoScriptSetup) {
+		$this->typoScriptSetup = $typoScriptSetup;
 	}
 
 	/**
 	 * Returns the grid layout setup.
 	 *
-	 * @param integer $pageId: The current page ID
 	 * @param string $layoutId: If set only requested layout setup, else all layout setups will be returned.
 	 * @return array
 	 */
-	public function getSetup($layoutId = '') {
+	public function getLayoutSetup($layoutId = '') {
 		// Continue only if setup for given layout ID found.
 		if (isset($this->layoutSetup[$layoutId])) {
 			return $this->layoutSetup[$layoutId];
@@ -56,7 +98,6 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 	 * @author Jo Hasenau <info@cybercraft.de>
 	 */
 	public function getTypoScriptSetup($layoutId) {
-
 		$typoScriptSetup = array();
 
 		if ($layoutId == '0' && isset($this->typoScriptSetup['setup.']['default.'])) {
@@ -74,7 +115,6 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 		}
 
 		return $typoScriptSetup;
-
 	}
 
 	/**
@@ -118,6 +158,7 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 							foreach ($row['columns.'] as $column) {
 								$availableColumns['CSV'] .= ','. $column['colPos'];
 								$availableColumns[$column['colPos']] = $column['allowed'] ? $column['allowed'] : '*';
+								$availableColumns['allowed'] .= $availableColumns['allowed'] ? ',' . $availableColumns[$column['colPos']] : $availableColumns[$column['colPos']];
 							}
 						}
 					}
@@ -134,10 +175,8 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 	 * @return array
 	 */
 	public function getLayoutSelectItems($colPos) {
-
 		$selectItems = array();
 		foreach ($this->layoutSetup as $layoutId => $item) {
-
 			if ($colPos == -1 && $item['top_level_layout']) {
 				continue;
 			}
@@ -147,11 +186,8 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 				$layoutId,
 				$item['icon'][0],
 			);
-
 		}
-
 		return $selectItems;
-
 	}
 
 	/**
@@ -162,33 +198,24 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 	 * @author Jo Hasenau <info@cybercraft.de>
 	 */
 	public function getLayoutColumnsSelectItems($layoutId) {
-
 		$selectItems = array();
-		$setup = $this->getSetup($layoutId);
+		$setup = $this->getLayoutSetup($layoutId);
 
 		if ($setup['config']['rows.']) {
-
 			foreach ($setup['config']['rows.'] as $row) {
-
 				if (isset($row['columns.']) && is_array($row['columns.'])) {
-
 					foreach ($row['columns.'] as $column) {
-
 						$selectItems[] = array(
 							$GLOBALS['LANG']->sL($column['name']),
 							$column['colPos'],
+							NULL,
+							$column['allowed']
 						);
-
 					}
-
 				}
-
 			}
-
 		}
-
 		return $selectItems;
-
 	}
 
 	/**
@@ -197,7 +224,6 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 	 * @return  array
 	 */
 	public function getLayoutWizardItems($colPos) {
-
 		$wizardItems = array();
 		foreach ($this->layoutSetup as $layoutId => $item) {
 
@@ -210,12 +236,12 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 				'title' => $GLOBALS['LANG']->sL($item['title']),
 				'description' => $GLOBALS['LANG']->sL($item['description']),
 				'icon' => $item['icon'],
+                'tll' => $item['top_level_layout'],
 			);
 
 		}
 
 		return $wizardItems;
-
 	}
 
 	/**
@@ -225,8 +251,7 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 	 * @return string
 	 */
 	public function getFlexformConfiguration($layoutId) {
-
-		$layoutSetup = $this->getSetup($layoutId);
+		$layoutSetup = $this->getLayoutSetup($layoutId);
 		// Get flexform file from pi_flexform_ds if pi_flexform_ds_file not set and "FILE:" found in pi_flexform_ds for backward compatibility.
 		if ($layoutSetup['pi_flexform_ds_file']) {
 			$flexformConfiguration = t3lib_div::getURL(t3lib_div::getFileAbsFileName($layoutSetup['pi_flexform_ds_file']));
@@ -239,7 +264,6 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 		}
 
 		return $flexformConfiguration;
-
 	}
 
 	/**
@@ -249,7 +273,6 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 	 * @return void
 	 */
 	protected function loadLayoutSetup($pageId) {
-
 		// Load page TSconfig.
 		$BEfunc = t3lib_div::makeInstance('t3lib_BEfunc');
 		$pageTSconfig = $BEfunc->getPagesTSconfig($pageId);
@@ -303,11 +326,11 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 			}
 		}
 
-		$storagePid = isset($pageTSconfig['TCEFORM.']['pages.']['_STORAGE_PID']) 
-            ? $pageTSconfig['TCEFORM.']['pages.']['_STORAGE_PID'] 
+		$storagePid = isset($pageTSconfig['TCEFORM.']['pages.']['_STORAGE_PID'])
+            ? $pageTSconfig['TCEFORM.']['pages.']['_STORAGE_PID']
             : 0;
-		$pageTSconfigId = isset($pageTSconfig['TCEFORM.']['tt_content.']['tx_gridelements_backend_layout.']['PAGE_TSCONFIG_ID']) 
-            ? $pageTSconfig['TCEFORM.']['tt_content.']['tx_gridelements_backend_layout.']['PAGE_TSCONFIG_ID'] 
+		$pageTSconfigId = isset($pageTSconfig['TCEFORM.']['tt_content.']['tx_gridelements_backend_layout.']['PAGE_TSCONFIG_ID'])
+            ? $pageTSconfig['TCEFORM.']['tt_content.']['tx_gridelements_backend_layout.']['PAGE_TSCONFIG_ID']
             : 0;
 
 		// Load records.
@@ -316,8 +339,8 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 			'*',
 			'tx_gridelements_backend_layout',
 			'(
-				( ' . $pageTSconfigId . ' = 0 AND ' . $storagePid . ' = 0 ) OR 
-				( tx_gridelements_backend_layout.pid = ' . $pageTSconfigId . ' OR tx_gridelements_backend_layout.pid = ' . $storagePid . ' ) OR 
+				( ' . $pageTSconfigId . ' = 0 AND ' . $storagePid . ' = 0 ) OR
+				( tx_gridelements_backend_layout.pid = ' . $pageTSconfigId . ' OR tx_gridelements_backend_layout.pid = ' . $storagePid . ' ) OR
 				( ' . $pageTSconfigId . ' = 0 AND tx_gridelements_backend_layout.pid = ' . $pageId . ' )
 			) AND NOT tx_gridelements_backend_layout.hidden AND NOT tx_gridelements_backend_layout.deleted',
 			'',
@@ -329,7 +352,6 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 		$gridLayoutRecords = array();
 
 		foreach ($result as $layoutId => $item) {
-
 			// Continue if layout is excluded.
 			if (in_array($layoutId, $excludeLayoutIds)) {
 				continue;
@@ -358,13 +380,14 @@ class tx_gridelements_layoutsetup implements t3lib_Singleton {
 		}
 
 		if ($overruleRecords === TRUE) {
-			$this->layoutSetup = t3lib_div::array_merge_recursive_overrule($gridLayoutConfig, $gridLayoutRecords);
+			$this->setLayoutSetup(
+				t3lib_div::array_merge_recursive_overrule($gridLayoutConfig, $gridLayoutRecords)
+			);
 		} else {
-			$this->layoutSetup = t3lib_div::array_merge_recursive_overrule($gridLayoutRecords, $gridLayoutConfig);
+			$this->setLayoutSetup(
+				t3lib_div::array_merge_recursive_overrule($gridLayoutRecords, $gridLayoutConfig)
+			);
 		}
-
 	}
-
 }
-
 ?>

@@ -4,15 +4,81 @@ if(typeof GridElementsDD === "undefined"){
 } else {
 	// setting piped in here from PHP
 	top.skipDraggableDetails = 0;
-	
+
 	if(Ext.get('ext-cms-layout-db-layout-php')) {
-		
+
+		// add action for show/hide gridColumn contents
+		var toggleIcons = Ext.select('.toggle-content').elements;
+		Ext.each(toggleIcons, function(el) {
+		  Ext.get(el).on('click', function(e) {
+			  Ext.get(e.target).findParent('td.t3-gridCell', 99, true).toggleClass('t3-gridCell-invisibleContent');
+		  })
+		});
+
+		// add "allowed ctypes" classes to pageColumns
+		var pageColumnsAllowedCTypes = top.pageColumnsAllowedCTypes.split('|');
+		for (var i = 0; i < pageColumnsAllowedCTypes.length; i++) {
+			var currentColClass = pageColumnsAllowedCTypes[i].split(':');
+			var currentCol = Ext.select('td.t3-page-column-' + currentColClass[0]);
+			Ext.get(currentCol).addClass(currentColClass[1]);
+		}
+
+		// add topLevel class to pageColumns
+		var mainGrid = Ext.select('table.t3-page-columns').elements[0];
+		if(mainGrid){
+			var topLevelTDs = Ext.get(mainGrid).select('> tbody > tr > td.t3-page-column');
+			Ext.each(topLevelTDs, function(topLevelTD){
+				Ext.get(topLevelTD).addClass('t3-gridTL');
+				//console.log(topLevelTD);
+				if(!Ext.get(topLevelTD).el.dom.className.match(/t3-allow-/)){
+					Ext.get(topLevelTD).addClass('t3-allow-all');
+				}
+			});
+		}
+
+		// add allowed ctypes to addNewButtons of gridColumns and contentElements
+		var rowHeaders = Ext.select('.t3-row-header').elements;
+		Ext.each(rowHeaders, function(rowHeader){
+			var rowHeaderLinkNew = Ext.get(rowHeader).select('a').first();
+			var onClick = rowHeaderLinkNew.getAttribute('onclick');
+			if (!onClick.match(/tx_gridelements_allowed=/)) {
+				var parentColumn = Ext.get(rowHeader).findParent('td.t3-gridCell', 4);
+				if(parentColumn){
+					var allowedCTypes = [];
+					var currentClasses = Ext.get(parentColumn).dom.className.split(' ');
+					for (var i = 0; i < currentClasses.length; i++) {
+						var currentClass = currentClasses[i];
+						if(currentClass.substr(0, 9) == 't3-allow-'){
+							allowedCTypes.push(currentClass.substr(9));
+						}
+					}
+					if(allowedCTypes[0] !== 'all'){
+						onClick = onClick.replace('db_new_content_el.php?', 'db_new_content_el.php?tx_gridelements_allowed=' + allowedCTypes.join(',') + '&');
+						rowHeaderLinkNew.set({onclick: onClick});
+					}
+				}
+			}
+		});
+
+		// add "active" class to t3-page-ce-header/body on hover
+		var contentElements = Ext.select('.t3-page-ce').elements;
+		Ext.each(contentElements, function(contentElement){
+			Ext.get(contentElement).addListener('mouseenter', function(e, t){
+				this.select('> .t3-page-ce-header').first().addClass('t3-page-ce-header-active');
+				this.select('> .t3-page-ce-body').first().addClass('t3-page-ce-body-active');
+			});
+			Ext.get(contentElement).addListener('mouseleave', function(e, t){
+				this.select('> .t3-page-ce-header').first().removeClass('t3-page-ce-header-active');
+				this.select('> .t3-page-ce-body').first().removeClass('t3-page-ce-body-active');
+			});
+		});
+
 		// add top dropzones after t3-page-colHeader elements
 		var dropZoneTpl = '<div class="x-dd-droptargetarea">' + TYPO3.l10n.localize('tx_gridelements_js.drophere') + '</div>',
 			dropZonePar = Ext.select('.t3-page-colHeader').elements;
+
 		Ext.each(dropZonePar, function(currentColHeader){
-			var 
-				parentCell = Ext.get(currentColHeader).parent(),
+			var parentCell = Ext.get(currentColHeader).parent(),
 				dropZoneID = null;
 			if(Ext.get(parentCell).id.substr(0, 6) != 'column') {
 				var parentCellClass = Ext.get(parentCell).dom.className.split(' ');
@@ -41,8 +107,6 @@ if(typeof GridElementsDD === "undefined"){
 			var currentDropZone = document.createElement('div');
 			currentDropZone.innerHTML = dropZoneTpl;
 			Ext.get(currentDropZone).select('div.x-dd-droptargetarea').set({title: dropZoneID});
-			Ext.get(currentDropZone).addClass('x-dd-droptargetarea');
-			Ext.get(currentDropZone).addClass('debugme');
 			Ext.get(currentDropZone).insertAfter(currentElement);
 		});
 
@@ -129,8 +193,7 @@ if(typeof GridElementsDD === "undefined"){
 				
 				// show additional info for each icon on mouseover below all tab containers if not deactivated
 				if(!top.skipDraggableDetails) {
-					var 
-						detailInfoTpl = new Ext.XTemplate(
+					var detailInfoTpl = new Ext.XTemplate(
 							'<div>',
 								'<img class="x-dd-draggableiteminfoimg" src="{bigIconSrc}">',
 								'<div class="x-dd-draggableiteminfotext">',
@@ -198,7 +261,7 @@ if(typeof GridElementsDD === "undefined"){
 				// e.g. http://core-540-rgeorgi.typo3-entw.telekom.de/typo3/sysext/cms/layout/db_new_content_el.php?id=4722&colPos=1&sys_language_uid=0&uid_pid=4722
 				if(draggableContainerFilled == false) {
 					Ext.get(document.createElement('div')).load({
-						url: '/typo3/sysext/cms/layout/db_new_content_el.php' + top.TYPO3.Backend.ContentContainer.iframe.window.location.search,
+						url: top.TYPO3.configuration.PATH_typo3 + 'sysext/cms/layout/db_new_content_el.php' + top.TYPO3.Backend.ContentContainer.iframe.window.location.search,
 						method: 'GET',
 						scripts: false,
 						params: {},
@@ -224,7 +287,7 @@ if(typeof GridElementsDD === "undefined"){
 				// e.g. http://core-540-rgeorgi.typo3-entw.telekom.de/typo3/sysext/cms/layout/db_new_content_el.php?id=4722&colPos=1&sys_language_uid=0&uid_pid=4722
 				if(draggableContainerFilled == false) {
 				    Ext.get(document.createElement('div')).load({
-					url: '/typo3/sysext/cms/layout/db_new_content_el.php' + top.TYPO3.Backend.ContentContainer.iframe.window.location.search,
+					url: top.TYPO3.configuration.PATH_typo3 + 'sysext/cms/layout/db_new_content_el.php' + top.TYPO3.Backend.ContentContainer.iframe.window.location.search,
 					method: 'GET',
 					scripts: false,
 					params: {

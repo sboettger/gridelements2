@@ -66,7 +66,8 @@ class tx_gridelements_pi1 extends tslib_pibase {
 		$layout = $this->cObj->data['tx_gridelements_backend_layout'];
 
 		/** @var tx_gridelements_layoutsetup $layoutSetup  */
-		$layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup', $this->cObj->data['pid'], $conf);
+		$layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup');
+		$layoutSetup->init($this->cObj->data['pid'], $conf);
 
 		$availableColumns = $layoutSetup->getLayoutColumns($layout);
 		$csvColumns = str_replace('-2,-1,', '', $availableColumns['CSV']);
@@ -142,33 +143,25 @@ class tx_gridelements_pi1 extends tslib_pibase {
 		}
 
 		return implode(',', $availableColumns);
-
 	}
 
-    /**
-     * fetches all available children for a certain grid container
-     *
-     * @param   int     $element: The uid of the grid container
-     * @param string $csvColumns : A list of available column IDs
-     * @return  array   $children: The child elements of this grid container
-     */
+	/**
+	 * fetches all available children for a certain grid container
+	 *
+	 * @param   int     $element: The uid of the grid container
+	 * @param string $csvColumns : A list of available column IDs
+	 * @return  array   $children: The child elements of this grid container
+	 */
 	public function getChildren($element = 0, $csvColumns = '') {
 
 		$children = array();
 
 		if ($element) {
-			if ($GLOBALS['TSFE']->sys_language_contentOL) {
-					// Sys language content is set to zero/-1 - and it is expected that whatever routine processes the output will
-					// OVERLAY the records with localized versions!
-				$sys_language_content = '0,-1';
-			} else {
-				$sys_language_content = intval($GLOBALS['TSFE']->sys_language_content);
-			}
 			$where = 'tx_gridelements_container = ' . $element .
-                $this->cObj->enableFields('tt_content') .
-                ' AND colPos != -2
-                AND tx_gridelements_columns IN (' . $csvColumns . ')
-                AND sys_language_uid IN (' . $sys_language_content . ')';
+				$this->cObj->enableFields('tt_content') .
+				' AND colPos != -2
+				AND tx_gridelements_columns IN (' . $csvColumns . ')
+				AND sys_language_uid IN (' . $this->getSysLanguageContent() . ')';
 
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 				'*',
@@ -178,28 +171,41 @@ class tx_gridelements_pi1 extends tslib_pibase {
 				'sorting ASC'
 			);
 
-            if (!$GLOBALS['TYPO3_DB']->sql_error()) {
-                while ($child = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
+			if (!$GLOBALS['TYPO3_DB']->sql_error()) {
+				while ($child = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
+					// Versioning preview:
+					$GLOBALS['TSFE']->sys_page->versionOL('tt_content', $child);
 
-                    // Versioning preview:
-                    $GLOBALS['TSFE']->sys_page->versionOL('tt_content', $child);
+					// Language overlay:
+					if (is_array($child) && $GLOBALS['TSFE']->sys_language_contentOL) {
+						$child = $GLOBALS['TSFE']->sys_page->getRecordOverlay('tt_content', $child, $GLOBALS['TSFE']->sys_language_content, $GLOBALS['TSFE']->sys_language_contentOL);
+					}
 
-                    // Language overlay:
-                    if (is_array($child) && $GLOBALS['TSFE']->sys_language_contentOL) {
-                        $child = $GLOBALS['TSFE']->sys_page->getRecordOverlay('tt_content', $child, $GLOBALS['TSFE']->sys_language_content, $GLOBALS['TSFE']->sys_language_contentOL);
-                    }
-
-                    if (is_array($child)) {
-                        $children[] = $child;
-                        unset($child);
-                    }
-                }
-                $GLOBALS['TYPO3_DB']->sql_free_result($res);
-            }
-        }
+					if (is_array($child)) {
+						$children[] = $child;
+						unset($child);
+					}
+				}
+				$GLOBALS['TYPO3_DB']->sql_free_result($res);
+			}
+		}
 
 		return $children;
+	}
 
+	/**
+	 * get sys language content
+	 *
+	 * @return int|string
+	 */
+	public function getSysLanguageContent() {
+		if ($GLOBALS['TSFE']->sys_language_contentOL) {
+			// Sys language content is set to zero/-1 - and it is expected that whatever routine processes the output will
+			// OVERLAY the records with localized versions!
+			return '0,-1';
+		} else {
+			return intval($GLOBALS['TSFE']->sys_language_content);
+		}
 	}
 
 	/**
@@ -224,17 +230,14 @@ class tx_gridelements_pi1 extends tslib_pibase {
 		}
 
 		return $row;
-
 	}
 
 	/**
 	 * fetches values from the grid flexform and assigns them to virtual fields in the data array
 	 *
 	 * @return void
-	 *
 	 */
 	public function getPiFlexFormData() {
-
 		$piFlexForm = $this->cObj->data['pi_flexform'];
 
 		if (is_array($piFlexForm['data'])) {
@@ -246,7 +249,6 @@ class tx_gridelements_pi1 extends tslib_pibase {
 				}
 			}
 		}
-
 	}
 
 	/**
@@ -260,7 +262,6 @@ class tx_gridelements_pi1 extends tslib_pibase {
 	 *
 	 */
 	public function getSetup($layout = 0, $conf = array()) {
-
 		t3lib_div::logDeprecatedFunction();
 
 		$setup = array();
@@ -280,36 +281,34 @@ class tx_gridelements_pi1 extends tslib_pibase {
 		}
 
 		return $setup;
-
 	}
 
-    /**
-     * renders the children of the grid container and
-     * puts them into their respective columns
-     *
-     * @param   array   $children: The children available for the grid container
-     * @param array $typoScriptSetup
-     * @param   array   $sortColumns: An Array of column positions within the grid container in the order they got in the grid setup
-     * @param array $availableColumns : A CSV list of available columns together with the allowed elements for each of them
-     * @return  array   $columns: The columns of the grid container containing the HTML output of their children
-     */
+	/**
+	 * renders the children of the grid container and
+	 * puts them into their respective columns
+	 *
+	 * @param   array   $children: The children available for the grid container
+	 * @param array $typoScriptSetup
+	 * @param   array   $sortColumns: An Array of column positions within the grid container in the order they got in the grid setup
+	 * @param array $availableColumns : A CSV list of available columns together with the allowed elements for each of them
+	 * @return  array   $columns: The columns of the grid container containing the HTML output of their children
+	 */
 	public function renderChildrenIntoParentColumns($children = array(), $typoScriptSetup = array(), $sortColumns = array(), $availableColumns = array()) {
+		$columns = $this->getUsedColumns($sortColumns);
 
-        $columns = $this->getUsedColumns($sortColumns);
+		// first we have to make a backup copy of the original data array
+		// and we have to modify the depth counter to avoid stopping too early
 
-        // first we have to make a backup copy of the original data array
-        // and we have to modify the depth counter to avoid stopping too early
+		$currentParentGrid = $this->copyCurrentParentGrid();
+		$parentGridData = $this->getParentGridData($currentParentGrid['data']);
 
-        $currentParentGrid = $this->copyCurrentParentGrid();
-        $parentGridData = $this->getParentGridData($currentParentGrid['data']);
+		$counter = count($children);
+		$parentRecordNumbers = array();
+		$GLOBALS['TSFE']->cObjectDepthCounter += $counter;
 
-        $counter = count($children);
-        $parentRecordNumbers = array();
-        $GLOBALS['TSFE']->cObjectDepthCounter += $counter;
-
-        // each of the children will now be rendered separately and the output will be added to it's particular column
+		// each of the children will now be rendered separately and the output will be added to it's particular column
 		foreach ($children as $child) {
-            $this->renderChildIntoParentColumn($child, $parentGridData, $columns, $parentRecordNumbers, $typoScriptSetup, $availableColumns);
+			$this->renderChildIntoParentColumn($child, $parentGridData, $columns, $parentRecordNumbers, $typoScriptSetup, $availableColumns);
 		}
 
 		// now we can reset the depth counter and the data array so that the element will behave just as usual
@@ -317,127 +316,118 @@ class tx_gridelements_pi1 extends tslib_pibase {
 		// since they will depend on the original data
 		$GLOBALS['TSFE']->cObjectDepthCounter -= $counter;
 
-        $this->resetCurrentParentGrid($currentParentGrid);
+    $this->resetCurrentParentGrid($currentParentGrid);
 
 		return $columns;
+	}
+
+	/**
+	 *
+	 *
+	 * @param array $sortColumns
+	 * @return array
+	 */
+	public function getUsedColumns($sortColumns = array()) {
+		$columns = array();
+
+		// we need the array values as keys
+		if(count($sortColumns) > 0) {
+			foreach($sortColumns as $column_number) {
+				$columns[$column_number . '.'] = '';
+			}
+		}
+
+		return $columns;
+	}
+
+	/**
+	 *
+	 *
+	 * @return array
+	 */
+	public function copyCurrentParentGrid() {
+
+		$data['record'] = $this->cObj->currentRecord;
+		$data['data'] = $this->cObj->data;
+		$data['parentRecordNumber'] = $this->cObj->parentRecordNumber;
+
+		return $data;
 
 	}
 
-    /**
-     *
-     *
-     * @param array $sortColumns
-     * @return array
-     */
-    public function getUsedColumns($sortColumns = array()) {
+	/**
+	 * @param $data
+	 * @return array
+	 */
+	public function resetCurrentParentGrid($data = array()) {
 
-        $columns = array();
+		$this->cObj->currentRecord = $data['record'];
+		$this->cObj->data = $data['data'];
+		$this->cObj->parentRecordNumber = $data['parentRecordNumber'];
 
-        // we need the array values as keys
-        if(count($sortColumns) > 0) {
-            foreach($sortColumns as $column_number) {
-                $columns[$column_number . '.'] = '';
-            }
-        }
+	}
 
-        return $columns;
+	/**
+	 *
+	 *
+	 * @param $data
+	 * @return array
+	 */
+	public function getParentGridData($data = array()) {
 
-    }
+		$parentGridData = array();
 
-    /**
-     *
-     *
-     * @return array
-     */
-    public function copyCurrentParentGrid() {
+		foreach($data as $key => $value) {
+			if(substr($key, 0, 11) != 'parentgrid_') {
+				$parentGridData['parentgrid_'.$key] = $value;
+			}
+		}
 
-        $data['record'] = $this->cObj->currentRecord;
-        $data['data'] = $this->cObj->data;
-        $data['parentRecordNumber'] = $this->cObj->parentRecordNumber;
-
-        return $data;
-
-    }
-
-    /**
-     *
-     *
-     * @param $data
-     * @return array
-     */
-    public function resetCurrentParentGrid($data = array()) {
-
-        $this->cObj->currentRecord = $data['record'];
-        $this->cObj->data = $data['data'];
-        $this->cObj->parentRecordNumber = $data['parentRecordNumber'];
-
-    }
-
-    /**
-     *
-     *
-     * @param $data
-     * @return array
-     */
-    public function getParentGridData($data = array()) {
-
-        $parentGridData = array();
-
-        foreach($data as $key => $value) {
-            if(substr($key, 0, 11) != 'parentgrid_') {
-                $parentGridData['parentgrid_'.$key] = $value;
-            }
-        }
-
-        return $parentGridData;
-
-    }
+		return $parentGridData;
+	}
 
 
-    /**
-     * renders the columns of the grid container and returns the actual content
-     *
-     * @param $child
-     * @param array $parsedData
-     * @param $columns
-     * @param array $typoScriptSetup
-     * @param array|string $availableColumns
-     * @internal param int $columnKey
-     * @internal param array $columnSetupKey
-     * @return  void
-     */
-    public function renderChildIntoParentColumn($child, $parentGridData = array(), &$columns, &$parentRecordNumbers, $typoScriptSetup = array(), $availableColumns = array()) {
+	/**
+	 * renders the columns of the grid container and returns the actual content
+	 *
+	 * @param array $child
+	 * @param array $parentGridData
+	 * @param array $columns
+	 * @param array $parentRecordNumbers
+	 * @param array $typoScriptSetup
+	 * @param array $availableColumns
+	 * @return  void
+	 */
+	public function renderChildIntoParentColumn($child, $parentGridData = array(), &$columns, &$parentRecordNumbers, $typoScriptSetup = array(), $availableColumns = array()) {
 
-        $column_number = intval($child['tx_gridelements_columns']);
-        $columnKey = $column_number . '.';
+		$column_number = intval($child['tx_gridelements_columns']);
+		$columnKey = $column_number . '.';
 
-        if (!isset($typoScriptSetup['columns.'][$columnKey])) {
-            $columnSetupKey = 'default.';
-        } else {
-            $columnSetupKey = $columnKey;
-        }
+		if (!isset($typoScriptSetup['columns.'][$columnKey])) {
+			$columnSetupKey = 'default.';
+		} else {
+			$columnSetupKey = $columnKey;
+		}
 
-        if($child['uid'] > 0) {
+		if($child['uid'] > 0) {
 
-           $this->cObj->start(array_merge($child, $parentGridData), 'tt_content');
+		$this->cObj->start(array_merge($child, $parentGridData), 'tt_content');
 
-            //			if(
-            //				t3lib_div::inList($availableColumns[$columnKey], $this->cObj->data['CType']) ||
-            //				$availableColumns[$columnKey] == '*'
-            //			) {
-            $parentRecordNumbers[$columnKey]++;
-            $this->cObj->parentRecordNumber = $parentRecordNumbers[$columnKey];
-            $columns[$columnKey] .= $this->cObj->cObjGetSingle(
-                $typoScriptSetup['columns.'][$columnSetupKey]['renderObj'],
-                $typoScriptSetup['columns.'][$columnSetupKey]['renderObj.']
-            );
-            //			}
+			//			if(
+			//				t3lib_div::inList($availableColumns[$columnKey], $this->cObj->data['CType']) ||
+			//				$availableColumns[$columnKey] == '*'
+			//			) {
+			$parentRecordNumbers[$columnKey]++;
+			$this->cObj->parentRecordNumber = $parentRecordNumbers[$columnKey];
+			$columns[$columnKey] .= $this->cObj->cObjGetSingle(
+				$typoScriptSetup['columns.'][$columnSetupKey]['renderObj'],
+				$typoScriptSetup['columns.'][$columnSetupKey]['renderObj.']
+			);
+			//			}
+		}
+	}
 
-        }
-
-    }
-
-/**
+	/**
 	 * renders the columns of the grid container and returns the actual content
 	 *
 	 * @param   array   $columns: The columns of the grid container containing the HTML output of their children
@@ -476,13 +466,13 @@ class tx_gridelements_pi1 extends tslib_pibase {
 	public function user_getTreeList() {
 		$GLOBALS['TSFE']->register['pidInList'] = trim(
 			($this->cObj->data['uid'] .
-					',' .
-					($GLOBALS['TSFE']->register['tt_content_shortcut_recursive'] ?
-						$this->cObj->getTreeList(
-							$this->cObj->data['uid'],
-							$GLOBALS['TSFE']->register['tt_content_shortcut_recursive']
-						) : ''
-					)
+				',' .
+				($GLOBALS['TSFE']->register['tt_content_shortcut_recursive'] ?
+					$this->cObj->getTreeList(
+						$this->cObj->data['uid'],
+						$GLOBALS['TSFE']->register['tt_content_shortcut_recursive']
+					) : ''
+				)
 			),
 			','
 		);
@@ -502,5 +492,4 @@ class tx_gridelements_pi1 extends tslib_pibase {
 if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/pi1/class.tx_gridelements_pi1.php'])) {
 	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/pi1/class.tx_gridelements_pi1.php']);
 }
-
 ?>

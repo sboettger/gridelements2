@@ -57,40 +57,28 @@ GridElementsDD = function() {
 				// is this a new or an existing element?
 				var dragEl = Ext.get(this.el);
 				if(dragEl.select('div.t3-page-ce-type a span').elements.length > 0) {
-					top.elementUID = dragEl.select('div.t3-page-ce-type a span').elements[0].getAttribute('title').replace('id=', '');
-					
-					// to avoid drops on the current/same position we check the element's parent
-					// this can be a dropzone or an element with a dropzone
-					// the check is on all x-dd-droptargetgroup-XYZ classes of the current element and if there's a match the matching drop-zone is memorized
-					// make extNewEl a dropzone too - one for each contained class!
-					/*var currentClasses = dragEl.dom.className.split(' ');
-					
-					// look for x-dd-droptargetgroup-XYZ class
-					for(var i in currentClasses) {
-						
-						if(!currentClasses.hasOwnProperty(i)) {
-							continue;
-						}
-						
-						if(/x-dd-droptargetgroup-/.test(currentClasses[i]) === true) {
-							var prevEl = dragEl.prev();
-							if(prevEl != null && prevEl.hasClass(currentClasses[i])) {
-								var 
-									firstDroptarget = prevEl.select('.x-dd-droptargetarea').elements[0],
-									containedDroptarget = Ext.get(firstDroptarget.id).select('.x-dd-droptargetarea').elements[0];
-								
-								top.originalfirstDroptarget = firstDroptarget.id;
-								if(containedDroptarget) {
-									top.originalPositionDropTargetId = containedDroptarget.id;
-								}
-								//console.log('drop targets: ', top.originalfirstDroptarget, top.originalPositionDropTargetId);
-							}
-						}
-					}*/
+					top.elementUID = dragEl.select('div.t3-page-ce-type a span').elements[0].getAttribute('title').replace('id=', '').match(/^(\d)+/g);
+
+					var currentSpacer = document.createElement('div');
+					Ext.get(currentSpacer).addClass('t3-dd-spacer');
+					Ext.get(currentSpacer).insertAfter(this.getEl());
+
 				} else {
 					top.elementUID = 'NEW';
 				}
-				
+
+				// is this a top level element?
+				top.isTopLevelOnly = (dragEl.select('div.t3-gridTLContainer').elements.length ? true : false);
+
+				// get CType
+				if(dragEl.select('div.t3-page-ce-body div[class^=t3-ctype-]').elements.length){
+					// existing ce
+					top.elementCType = dragEl.select('div.t3-page-ce-body div[class^=t3-ctype-]').elements[0].className.substr(9);
+				}else{
+					// new ce
+					top.elementCType = dragEl.select('div[class^=t3-ctype-]').elements[0].className.substr(9);
+				}
+
 				// always cache the original XY Coordinates of the element
 				this.originalXY = this.el.getXY();
 				
@@ -105,11 +93,9 @@ GridElementsDD = function() {
 				this.el.addClass('x-dd-dragging');
 				
 				if(this.isDraggable) {
-					
 					// cache current content within dragger
 					this.draggerContent = this.el.dom.innerHTML;
-					
-					
+
 					// this uses the actual dragger icon:
 					this.draggerTemplate = '<div>' + this.prevEl.dom.innerHTML + '</div>';
 					
@@ -161,22 +147,37 @@ GridElementsDD = function() {
 					this.nextEl = false;
 				}
 				
-				// activate all dropzones
+				// activate dropzones of elements other than the current one, depending on ctype and toplevel
 				Ext.each(Ext.select('.x-dd-droptargetgroup-' + this.dragClass).elements, function(elementNow) {
-					// only activate dropzones of elements other than the current one
-					// or always if this is not a draggable
-					
-					if(
-						top.elId !== elementNow.id 
-						&& 
-						(
-							Ext.get(elementNow).select('.x-dd-droptargetarea').elements[0]
-							&&
-							top.originalfirstDroptarget !== Ext.get(elementNow).select('.x-dd-droptargetarea').elements[0].id
-						)
-					) {
-						Ext.get(elementNow).select('.x-dd-droptargetarea').addClass('x-dd-showdroptarget');
+
+					var showDropTarget = false;
+
+					if(top.elId !== elementNow.id){
+
+						var elNow = Ext.get(elementNow);
+						var parentGridContainer = elNow.findParent('div.t3-gridContainer', 7);
+
+						if(elNow.select('.x-dd-droptargetarea').elements[0]){
+							//if(parentGridContainer){
+							if(elNow.findParent('td.t3-allow-all', 5) || elNow.findParent('td.t3-allow-'+top.elementCType, 5)){
+								if(top.isTopLevelOnly){
+									if(elNow.findParent('td.t3-gridTL', 5)){
+										showDropTarget = true;
+									}
+								}else{
+									showDropTarget = true;
+								}
+							}
+						}
+
 					}
+
+					if(showDropTarget){
+						Ext.get(elementNow).select('.x-dd-droptargetarea').addClass('x-dd-showdroptarget');
+					}else{
+						Ext.get(elementNow).select('.x-dd-droptargetarea').removeClass('x-dd-showdroptarget');
+					}
+
 				});
 			},
 			// called when the drag element is dragged over the a drop target with the same ddgroup
@@ -275,16 +276,18 @@ GridElementsDD = function() {
 					// we don't need the redirect URL, since we will do a reload after the Ajax action
 					// so a redirect within the Ajax action would be too much server load here
 					actionURL = actionURL.replace('&redirect=1', '');
-					
+
+
 					// before executing the Ajax action, we have to activate the mask with the spinning wheel
 					top.TYPO3.Backend.ContentContainer.setMask();
-					
 					Ext.Ajax.request({
 						url: actionURL,
 						success: function( result, request ) {
 							if(GridElementsDD.baseConf.doReloadsAfterDrops) {
 								// reload page to verify/show updates
-								self.location.reload();
+								locationSplit = self.location.href.split('#');
+								self.location.href = locationSplit[0] + '#ce' + top.targetUID;
+								self.location.reload(true);
 							}else{
 								// after the operation has finished, we simply hide the spinner
 								top.TYPO3.Backend.ContentContainer.removeMask();
@@ -293,14 +296,16 @@ GridElementsDD = function() {
 						failure: function( result, request ) {
 							if(GridElementsDD.baseConf.doReloadsAfterDrops) {
 								// reload page to verify/show updates
-								self.location.reload();
+								locationSplit = self.location.href.split('#');
+								self.location.href = locationSplit[0] + '#ce' + top.targetUID;
+								self.location.reload(true);
 							}else{
 								// TODO: error happened - put dragged element back to original position');
 								top.TYPO3.Backend.ContentContainer.removeMask();
 							}
 						}
 					});
-					
+
 					// add after Ext.get(targetElId)
 					if(columnInsert) {
 						this.el.insertAfter(Ext.get(targetElId).parent());
@@ -324,7 +329,12 @@ GridElementsDD = function() {
 			
 			// called after dnd ends with or without success
 			endDrag: function() {
-				
+				// Remove tmp spacer div from grid layout
+				var ddSpacer = Ext.select('.t3-dd-spacer');
+				if(ddSpacer.elements.length){
+					ddSpacer.first().remove();
+				}
+
 				// invoke animation only if invalidDrop is true
 				if(this.invalidDrop === true) {
 					
@@ -343,7 +353,7 @@ GridElementsDD = function() {
 								// replace content with original draggerContent
 								this.el.dom.innerHTML = this.draggerContent;
 							}
-							
+
 							// put item back to original DOM position
 							this.el.insertAfter(this.prevEl);
 						}
@@ -465,7 +475,7 @@ GridElementsDD = function() {
 			// show loading spinner
 			top.TYPO3.Backend.ContentContainer.setMask();
 			
-			actionURL = '/typo3/alt_doc.php?' + this.el.dom.rel + '&edit[tt_content][]=new';
+			actionURL = top.TYPO3.configuration.PATH_typo3 + 'alt_doc.php?' + this.el.dom.rel + '&edit[tt_content][]=new';
 			
 			Ext.Ajax.request({
 				url: actionURL,
@@ -480,7 +490,9 @@ GridElementsDD = function() {
 				success: function( result, request ) {
 					if(GridElementsDD.baseConf.doReloadsAfterDrops) {
 						// reload page to verify/show updates
-						self.location.reload();
+						locationSplit = self.location.href.split('#');
+						self.location.href = locationSplit[0] + '#ce' + top.targetUID;
+						self.location.reload(true);
 					}else{
 						// after the operation has finished, we simply hide the spinner
 						top.TYPO3.Backend.ContentContainer.removeMask();
@@ -489,7 +501,9 @@ GridElementsDD = function() {
 				failure: function( result, request ) {
 					if(GridElementsDD.baseConf.doReloadsAfterDrops) {
 						// reload page to verify/show updates
-						self.location.reload();
+						locationSplit = self.location.href.split('#');
+						self.location.href = locationSplit[0] + '#ce' + top.targetUID;
+						self.location.reload(true);
 					}else{
 						// TODO: error happened - remove just dropped element and show error');
 						// after the operation has finished, we simply hide the spinner
@@ -610,21 +624,54 @@ GridElementsDD = function() {
 				}
 			});
 			
+			// add "new reference from other page" icons
+			var
+				newFromPageIconFunc = function(){
+					Ext.Msg.alert('Partial Success', 'This icon will open a wizard to get content elements from other pages ... TBD!');
+				},
+				newFromPageIconConf = {
+					tag: 'a',
+					href: '#',
+					title: TYPO3.l10n.localize('tx_gridelements_js.copyfrompage'),
+					cn: {
+						tag:'span',
+						class: 't3-icon t3-icon-actions t3-icon-actions-document t3-icon-copyfrompage',
+						html:'&nbsp;'
+					}
+				},
+				// add doc header "New" icon to a new array that collects all "New" icons
+				arrNewicons = [Ext.select('.t3-icon-document-new', true, 'typo3-docheader-row1').elements[0]];
+
+			// add all other ”New" icons to array
+			Ext.each(Ext.select('.t3-icon-document-new', true, Ext.select('.t3-row-header').elements).elements, function(){
+				arrNewicons.push(this);
+			});
+
+			// add new icon and bind click event
+			Ext.each(arrNewicons, function(){
+				Ext.DomHelper.insertAfter(this.parent(), newFromPageIconConf, true).on('click', newFromPageIconFunc);
+			});
+
+
+			//console.log('elNewFromPageIcon', elNewFromPageIcon);
 			this.isInitialized = true;
 		},
 		
 		makeDragger: function(elementNow) {
-			var 
+			var
 				extElNow = Ext.get(elementNow),
 				elementNowTitle = extElNow.getAttribute('title'),
 				elementNowWidth = extElNow.getComputedWidth(),
 				elementNowHeight = extElNow.getHeight(),
 				elementNowMargins = extElNow.getMargins(),
 				elementNowValign = extElNow.getStyles('vertical-align')['vertical-align'],
-				currentEl = Ext.DomHelper.insertHtml('afterEnd', elementNow, '<div title="' + elementNowTitle + '" class="x-dd-droptargetgroup" style="position: relative; display: inline-block; z-index: 99; width: ' + elementNowWidth + 'px; height: ' + elementNowHeight + 'px; margin-left: -' + (elementNowWidth + elementNowMargins.right) + 'px; margin-top: -' + elementNowMargins.top + 'px; vertical-align: ' + elementNowValign + '"></div>'),
+				elementNowCType = (extElNow.getAttribute('onclick').match(/tt_content%5D%5BCType%5D%3D\w+/) ? 't3-ctype-' + extElNow.getAttribute('onclick').match(/tt_content%5D%5BCType%5D%3D\w+/)[0].substr(27) : ''),
+				elementNowTopLevelLayout = (extElNow.getAttribute('onclick').match(/isTopLevelLayout/) ? ' t3-gridTLContainer' : ''),
+				elementNowClassContainer = '<div class="' + elementNowCType + elementNowTopLevelLayout + '" style="display:none"></div>',
+				currentEl = Ext.DomHelper.insertHtml('afterEnd', elementNow, '<div title="' + elementNowTitle + '" class="x-dd-droptargetgroup" style="position: relative; display: inline-block; z-index: 99; width: ' + elementNowWidth + 'px; height: ' + elementNowHeight + 'px; margin-left: -' + (elementNowWidth + elementNowMargins.right) + 'px; margin-top: -' + elementNowMargins.top + 'px; vertical-align: ' + elementNowValign + '">' + elementNowClassContainer + '</div>'),
 				currentClasses = Ext.get(extElNow).dom.className.split(' '),
 				matchingClass = '';
-			
+
 			// reset previous settings
 			dragBehaviorDraggables.dragClass = null;
 			dragBehaviorDraggables.useTpl = null;
@@ -740,49 +787,53 @@ GridElementsDD = function() {
 				
 				// dropZoneID now has this format: column-1234567x0 or DD_PAGECOLUMNx0
 				// the number after the "x" can be positive and negative, e.g. DD_PAGECOLUMNx-2 for "unused elements"
-				var pasteCopyHeaderLink = Ext.get(currentColHeader).select('.t3-page-colHeader-icons a:first').elements[0].cloneNode(true),
-					pasteRefHeaderLink = Ext.get(currentColHeader).select('.t3-page-colHeader-icons a:first').elements[0].cloneNode(true),
-					lastColHeaderLink = Ext.get(currentColHeader).select('.t3-page-colHeader-icons a:last').elements[0];
-				
-				// customize copy icon
-				pasteCopyHeaderLink.title = TYPO3.l10n.localize('tx_gridelements_js.pastecopy');
-				copyHeaderIcon = Ext.get(pasteCopyHeaderLink).select('span:first').elements[0];
-				Ext.get(copyHeaderIcon).removeClass('t3-icon-document-new');
-				Ext.get(copyHeaderIcon).addClass('t3-icon-document-paste-after');
-				Ext.get(copyHeaderIcon).addClass('t3-icon-dd-paste-copy-into');
-				
-				if(top.DDclipboardfilled == 'move') {
-					
-					Ext.get(pasteCopyHeaderLink).set({
-						href: '#',
-						onclick: "GridElementsDD.ajaxThenReload('" + top.moveURL.replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "&CB[paste]=tt_content%7C-" + clipboardItemUid + "&CB[pad]=normal'); return false;"
-					});
+				var firstColHeader = Ext.get(currentColHeader).select('.t3-page-colHeader-icons a:first');
+				var lastColHeader = Ext.get(currentColHeader).select('.t3-page-colHeader-icons a:last');
+
+				var pasteCopyHeaderLink = (firstColHeader.elements[0] ? firstColHeader.elements[0].cloneNode(true) : null);
+				var pasteRefHeaderLink = (firstColHeader.elements[0] ? firstColHeader.elements[0].cloneNode(true) : null);
+				var lastColHeaderLink = (lastColHeader.elements[0] ? lastColHeader.elements[0] : null);
+
+				if (pasteCopyHeaderLink) {
+					// customize copy icon
+					pasteCopyHeaderLink.title = TYPO3.l10n.localize('tx_gridelements_js.pastecopy');
+					copyHeaderIcon = Ext.get(pasteCopyHeaderLink).select('span:first').elements[0];
+					Ext.get(copyHeaderIcon).removeClass('t3-icon-document-new');
+					Ext.get(copyHeaderIcon).addClass('t3-icon-document-paste-after');
+					Ext.get(copyHeaderIcon).addClass('t3-icon-dd-paste-copy-into');
+
+					if(top.DDclipboardfilled == 'move') {
+
+						Ext.get(pasteCopyHeaderLink).set({
+							href: '#',
+							onclick: "GridElementsDD.ajaxThenReload('" + top.moveURL.replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "&CB[paste]=tt_content%7C-" + clipboardItemUid + "&CB[pad]=normal'); return false;"
+						});
+					}
+
+					if(top.DDclipboardfilled == 'copy') {
+
+						Ext.get(pasteCopyHeaderLink).set({
+							href: '#',
+							onclick: "GridElementsDD.ajaxThenReload('" + top.pasteTpl.replace('DD_REFYN', '0&DDcopy=1').replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "'); return false;"
+						});
+
+						// customize ref icon
+						pasteRefHeaderLink.title = TYPO3.l10n.localize('tx_gridelements_js.pasteref');
+						refHeaderIcon = Ext.get(pasteRefHeaderLink).select('span:first').elements[0];
+						Ext.get(refHeaderIcon).removeClass('t3-icon-document-new');
+						Ext.get(refHeaderIcon).addClass('t3-icon-document-paste-after');
+						Ext.get(refHeaderIcon).addClass('t3-icon-dd-paste-reference-into');
+						Ext.get(pasteRefHeaderLink).set({
+							href: '#',
+							onclick: "GridElementsDD.ajaxThenReload('" + top.pasteTpl.replace('DD_REFYN', 1).replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "'); return false;"
+						});
+
+						// insert both links
+						Ext.get(pasteRefHeaderLink).insertAfter(lastColHeaderLink);
+					}
+
+					Ext.get(pasteCopyHeaderLink).insertAfter(lastColHeaderLink);
 				}
-				
-				if(top.DDclipboardfilled == 'copy') {
-					
-					Ext.get(pasteCopyHeaderLink).set({
-						href: '#',
-						onclick: "GridElementsDD.ajaxThenReload('" + top.pasteTpl.replace('DD_REFYN', '0&DDcopy=1').replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "'); return false;"
-					});
-					
-					// customize ref icon
-					pasteRefHeaderLink.title = TYPO3.l10n.localize('tx_gridelements_js.pasteref');
-					refHeaderIcon = Ext.get(pasteRefHeaderLink).select('span:first').elements[0];
-					Ext.get(refHeaderIcon).removeClass('t3-icon-document-new');
-					Ext.get(refHeaderIcon).addClass('t3-icon-document-paste-after');
-					Ext.get(refHeaderIcon).addClass('t3-icon-dd-paste-reference-into');
-					Ext.get(pasteRefHeaderLink).set({
-						href: '#',
-						onclick: "GridElementsDD.ajaxThenReload('" + top.pasteTpl.replace('DD_REFYN', 1).replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "'); return false;"
-					});
-				
-					// insert both links
-					Ext.get(pasteRefHeaderLink).insertAfter(lastColHeaderLink);
-				}
-				
-				Ext.get(pasteCopyHeaderLink).insertAfter(lastColHeaderLink);
-				
 			});
 		},
 		
@@ -796,7 +847,9 @@ GridElementsDD = function() {
 				success: function(result, request) {
 					if(GridElementsDD.baseConf.doReloadsAfterDrops) {
 						// reload page to verify/show updates
-						self.location.reload();
+						locationSplit = self.location.href.split('#');
+						self.location.href = locationSplit[0] + '#ce' + top.targetUID;
+						self.location.reload(true);
 					}else{
 						// after the operation has finished, we simply hide the spinner
 						top.TYPO3.Backend.ContentContainer.removeMask();
@@ -805,7 +858,9 @@ GridElementsDD = function() {
 				failure: function(result, request) {
 					if(GridElementsDD.baseConf.doReloadsAfterDrops) {
 						// reload page to verify/show updates
-						self.location.reload();
+						locationSplit = self.location.href.split('#');
+						self.location.href = locationSplit[0] + '#ce' + top.targetUID;
+						self.location.reload(true);
 					}else{
 						// TODO: handle error
 						top.TYPO3.Backend.ContentContainer.removeMask();
