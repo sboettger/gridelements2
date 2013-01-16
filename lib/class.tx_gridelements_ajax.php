@@ -99,7 +99,7 @@ class tx_gridelements_ajax {
 
 			$this->initializeTemplateContainer();
 
-			$elementChilds = tx_gridelements_helper::getInstance()->getChilds($table, $uid);
+			$elementChilds = tx_gridelements_helper::getInstance()->getChildren($table, $uid);
 
 
 			/** @var $recordList localRecordList */

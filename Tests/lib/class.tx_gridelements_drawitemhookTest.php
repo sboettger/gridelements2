@@ -158,9 +158,12 @@ class tx_gridelements_drawitemhookTest extends Tx_Extbase_Tests_Unit_BaseTestCas
 
 		$colPosValues = NULL;
 		$expectedColPosValues = array();
-		$expectedColPosValues[1] = 'Überschrift';
-		$expectedColPosValues[10] = 'Text';
-		$expectedColPosValues[2] = 'Bild';
+		$expectedColPosValues[1]['name'] = 'Überschrift';
+		$expectedColPosValues[1]['allowed'] = '';
+		$expectedColPosValues[10]['name'] = 'Text';
+		$expectedColPosValues[10]['allowed'] = '';
+		$expectedColPosValues[2]['name'] = 'Bild';
+		$expectedColPosValues[2]['allowed'] = '';
 
 		$drawItemHook->lang = $this->getMock('language');
 		$drawItemHook->lang
@@ -182,9 +185,12 @@ class tx_gridelements_drawitemhookTest extends Tx_Extbase_Tests_Unit_BaseTestCas
 
 		$colPosValues = NULL;
 		$expectedColPosValues = array();
-		$expectedColPosValues[1] = 'Überschrift';
-		$expectedColPosValues[256] = 'Text';
-		$expectedColPosValues[2] = 'Bild';
+		$expectedColPosValues[1]['name'] = 'Überschrift';
+		$expectedColPosValues[1]['allowed'] = '';
+		$expectedColPosValues[32768]['name'] = 'Text';
+		$expectedColPosValues[32768]['allowed'] = '';
+		$expectedColPosValues[2]['name'] = 'Bild';
+		$expectedColPosValues[2]['allowed'] = '';
 
 		$drawItemHook->lang = $this->getMock('language');
 		$drawItemHook->lang
@@ -206,9 +212,12 @@ class tx_gridelements_drawitemhookTest extends Tx_Extbase_Tests_Unit_BaseTestCas
 
 		$colPosValues = NULL;
 		$expectedColPosValues = array();
-		$expectedColPosValues[1] = 'Überschrift';
-		$expectedColPosValues[256] = 'Nicht zugewiesen';
-		$expectedColPosValues[2] = 'Bild';
+		$expectedColPosValues[1]['name'] = 'Überschrift';
+		$expectedColPosValues[1]['allowed'] = '';
+		$expectedColPosValues[32768]['name'] = 'Nicht zugewiesen';
+		$expectedColPosValues[32768]['allowed'] = '';
+		$expectedColPosValues[2]['name'] = 'Bild';
+		$expectedColPosValues[2]['allowed'] = '';
 
 		$drawItemHook->lang = $this->getMock('language');
 		$drawItemHook->lang
@@ -234,9 +243,12 @@ class tx_gridelements_drawitemhookTest extends Tx_Extbase_Tests_Unit_BaseTestCas
 
 		$colPosValues = NULL;
 		$expectedColPosValues = array();
-		$expectedColPosValues[1] = 'Überschrift';
-		$expectedColPosValues[256] = 'Nicht zugewiesen';
-		$expectedColPosValues[256] = 'Nicht zugewiesen';
+		$expectedColPosValues[1]['name'] = 'Überschrift';
+		$expectedColPosValues[1]['allowed'] = '';
+		$expectedColPosValues[32768]['name'] = 'Nicht zugewiesen';
+		$expectedColPosValues[32768]['allowed'] = '';
+		$expectedColPosValues[32768]['name'] = 'Nicht zugewiesen';
+		$expectedColPosValues[32768]['allowed'] = '';
 
 		$drawItemHook->lang = $this->getMock('language');
 		$drawItemHook->lang

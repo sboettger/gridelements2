@@ -522,7 +522,7 @@ class ux_localRecordList extends localRecordList {
 			$this->addElement_tdCssClass['_LOCALIZATION_b'] = 'col-localizationb';
 
 			if ($table == 'tt_content') {
-				$elementChilds = tx_gridelements_helper::getInstance()->getChilds($table, $row['uid']);
+				$elementChilds = tx_gridelements_helper::getInstance()->getChildren($table, $row['uid']);
 				if (count($elementChilds) > 0) {
 					$theData['_EXPANDABLE_'] = true;
 					$theData['_EXPAND_ID_'] = $table . ':' . $row['uid'];

@@ -44,7 +44,7 @@ class tx_gridelements_db_listhookTest extends Tx_Extbase_Tests_Unit_BaseTestCase
 			'ORDERBY' => '',
 			'LIMIT' => ''
 		);
-		$parent = new stdClass();
+		$parent = t3lib_div::makeInstance('ux_localRecordList');
 		$table = 'pages';
 		$pageId = 12;
 		$addWhere = 'AND hidden = 0';
@@ -53,7 +53,7 @@ class tx_gridelements_db_listhookTest extends Tx_Extbase_Tests_Unit_BaseTestCase
 		$expectedQueryParts = $testQueryParts = $queryParts;
 		$dbList->makeQueryArray_post($testQueryParts, $parent, $table, $pageId, $addWhere, $fieldList, $params);
 		$this->assertEquals($expectedQueryParts, $testQueryParts);
-		$this->assertEquals(new stdClass(), $parent);
+		$this->assertEquals('ux_localRecordList', get_class($parent));
 		$this->assertEquals('pages', $table);
 		$this->assertEquals(12, $pageId);
 		$this->assertEquals('AND hidden = 0', $addWhere);
@@ -62,10 +62,11 @@ class tx_gridelements_db_listhookTest extends Tx_Extbase_Tests_Unit_BaseTestCase
 
 		$table = 'tt_content';
 		$expectedQueryParts['ORDERBY'] = 'colPos';
+		$expectedQueryParts['WHERE'] = 'uid = 1 AND colPos != -1';
 		$testQueryParts = $queryParts;
 		$dbList->makeQueryArray_post($testQueryParts, $parent, $table, $pageId, $addWhere, $fieldList, $params);
 		$this->assertEquals($expectedQueryParts, $testQueryParts);
-		$this->assertEquals(new stdClass(), $parent);
+		$this->assertEquals('ux_localRecordList', get_class($parent));
 		$this->assertEquals('tt_content', $table);
 		$this->assertEquals(12, $pageId);
 		$this->assertEquals('AND hidden = 0', $addWhere);
@@ -77,7 +78,7 @@ class tx_gridelements_db_listhookTest extends Tx_Extbase_Tests_Unit_BaseTestCase
 		$testQueryParts = $queryParts;
 		$dbList->makeQueryArray_post($testQueryParts, $parent, $table, $pageId, $addWhere, $fieldList, $params);
 		$this->assertEquals($expectedQueryParts, $testQueryParts);
-		$this->assertEquals(new stdClass(), $parent);
+		$this->assertEquals('ux_localRecordList', get_class($parent));
 		$this->assertEquals('tt_content', $table);
 		$this->assertEquals(12, $pageId);
 		$this->assertEquals('AND hidden = 0', $addWhere);
@@ -88,10 +89,10 @@ class tx_gridelements_db_listhookTest extends Tx_Extbase_Tests_Unit_BaseTestCase
 		$testQueryParts = $queryParts;
 		$testQueryParts['SELECT'] = 'title';
 		$expectedQueryParts['ORDERBY'] = 'colPos';
-		$expectedQueryParts['SELECT'] = 'title,colPos';
+		$expectedQueryParts['SELECT'] = 'colPos,title';
 		$dbList->makeQueryArray_post($testQueryParts, $parent, $table, $pageId, $addWhere, $fieldList, $params);
 		$this->assertEquals($expectedQueryParts, $testQueryParts);
-		$this->assertEquals(new stdClass(), $parent);
+		$this->assertEquals('ux_localRecordList', get_class($parent));
 		$this->assertEquals('tt_content', $table);
 		$this->assertEquals(12, $pageId);
 		$this->assertEquals('AND hidden = 0', $addWhere);
@@ -110,17 +111,17 @@ class tx_gridelements_db_listhookTest extends Tx_Extbase_Tests_Unit_BaseTestCase
 		$list = 'uid,pid, bodytext, title';
 		$value = 'colPos';
 		$result = $dbList->addValueToList($list, $value);
-		$this->assertEquals('uid,pid,bodytext,title,colPos', $result);
+		$this->assertEquals('colPos,uid,pid,bodytext,title', $result);
 
 		$list = 'uid,pid, colPos,bodytext, title';
 		$value = 'colPos';
 		$result = $dbList->addValueToList($list, $value);
-		$this->assertEquals('uid,pid,colPos,bodytext,title', $result);
+		$this->assertEquals('colPos,uid,pid,bodytext,title', $result);
 
 		$list = 'uid,pid, colpos,bodytext, title';
 		$value = 'colPos';
 		$result = $dbList->addValueToList($list, $value);
-		$this->assertEquals('uid,pid,colpos,bodytext,title,colPos', $result);
+		$this->assertEquals('colPos,uid,pid,colpos,bodytext,title', $result);
 	}
 }
 ?>
