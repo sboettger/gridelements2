@@ -273,9 +273,9 @@ td.t3-gridCell-unassigned div.t3-row-header div {
 }
 
 /* we replace the t3skin sprite with one that also contains gridelement icons */
-.t3-icon-actions {
+/*.t3-icon-actions {
 	background-image: url('../../img/t3skin-ge-icons.png?4') !important;
-}
+}*/
 .t3-icon-copyfrompage {
 	background-position: -0px -340px !important;
 }
