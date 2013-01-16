@@ -47,14 +47,14 @@ class tx_gridelements_tcemain_processCmdmapAfterFinish extends tx_gridelements_t
 	public function processCmdmapAfterFinish(&$parentObj) {
 		if(isset($GLOBALS['actionOnGridElement']) && count($GLOBALS['actionOnGridElement'])) {
 			foreach ($GLOBALS['actionOnGridElement'] as $action) {
-				$placeHolderRecord = $this->beFunc->getRecord($action['table'], $action['id']);
+				$placeHolderRecord = $parentObj->beFunc->getRecord($action['table'], $action['id']);
 
 				if (strlen(strval($action['value'])) == 0) $action['value'] = $placeHolderRecord['sys_language_uid'];
 
 				// we only care about gridelements on workspaces
 				if ($placeHolderRecord['CType'] == 'gridelements_pi1' && $parentObj->BE_USER->workspace > 0) {
 
-					$versionRecord = $this->beFunc->getRecordsByField($action['table'], 't3ver_oid', $placeHolderRecord['uid'], 'AND pid < 0 AND sys_language_uid = ' . $action['value']);
+					$versionRecord = $parentObj->beFunc->getRecordsByField($action['table'], 't3ver_oid', $placeHolderRecord['uid'], 'AND pid < 0 AND sys_language_uid = ' . $action['value']);
 					$versionRecord = $versionRecord[0];
 
 					if (is_array($versionRecord)) {
