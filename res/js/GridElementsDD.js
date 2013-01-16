@@ -649,9 +649,10 @@ GridElementsDD = function() {
 
 			// add new icon and bind click event
 			Ext.each(arrNewicons, function(){
-				Ext.DomHelper.insertAfter(this.parent(), newFromPageIconConf, true).on('click', newFromPageIconFunc);
+				if(this.hasOwnProperty('parent')){
+					Ext.DomHelper.insertAfter(this.parent(), newFromPageIconConf, true).on('click', newFromPageIconFunc);
+				}
 			});
-
 
 			//console.log('elNewFromPageIcon', elNewFromPageIcon);
 			this.isInitialized = true;

@@ -57,7 +57,6 @@ td.t3-gridCell-unassigned div.t3-row-header div {
 
 .t3-row-header {
 	background-color: inherit;
-	xbackground-image: inherit
 }
 
 .t3-page-ce .t3-row-header {
@@ -80,6 +79,14 @@ td.t3-gridCell-unassigned div.t3-row-header div {
 	visibility: hidden;
 }
 
+.t3-page-ce .t3-page-colHeader .t3-page-colHeader-icons {
+	visibility: hidden !important;
+}
+
+.t3-page-ce .t3-page-colHeader .t3-page-colHeader-icons-active {
+	visibility: visible !important;
+}
+
 .t3-page-ce-body-active {
 	border-color: #5B5B5B !important;
 }
@@ -96,6 +103,7 @@ td.t3-gridCell-unassigned div.t3-row-header div {
 .t3-page-colHeader {
 	margin-top: 5px;
 	margin-bottom: 0px;
+	background-image: inherit;
 }
 
 .active .exampleContent .t3-page-colHeader {
@@ -106,8 +114,8 @@ td.t3-gridCell-unassigned div.t3-row-header div {
 
 .t3-page-colHeader-label {
 	white-space: nowrap;
-	text-align: left;
-	margin: 0 40px 0 85px;
+	text-align: center;
+	margin: 0 50px;
 }
 
 .t3-gridContainer--1 {

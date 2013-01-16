@@ -79,6 +79,15 @@ class tx_gridelements_pagerendererhook {
 
 				// add JavaScript library
 				$pageRenderer->addJsFile(
+					$GLOBALS['BACK_PATH'] . t3lib_extMgm::extRelPath('gridelements') . 'res/js/dbNewContentElWizardFixDTM.js',
+					$type = 'text/javascript',
+					$compress = TRUE,
+					$forceOnTop = FALSE,
+					$allWrap = ''
+				);
+
+				// add JavaScript library
+				$pageRenderer->addJsFile(
 					$GLOBALS['BACK_PATH'] . t3lib_extMgm::extRelPath('gridelements') . 'res/js/GridElementsDD.js',
 					$type = 'text/javascript',
 					$compress = TRUE,

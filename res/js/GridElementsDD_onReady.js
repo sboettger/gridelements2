@@ -66,10 +66,20 @@ if(typeof GridElementsDD === "undefined"){
 			Ext.get(contentElement).addListener('mouseenter', function(e, t){
 				this.select('> .t3-page-ce-header').first().addClass('t3-page-ce-header-active');
 				this.select('> .t3-page-ce-body').first().addClass('t3-page-ce-body-active');
+
+				var gridTable = this.select('> .t3-page-ce-body table.t3-gridTable').first();
+				if(gridTable){
+					gridTable.select('> tbody > tr > td > .t3-page-colHeader > .t3-page-colHeader-icons').addClass('t3-page-colHeader-icons-active');
+				}
 			});
 			Ext.get(contentElement).addListener('mouseleave', function(e, t){
 				this.select('> .t3-page-ce-header').first().removeClass('t3-page-ce-header-active');
 				this.select('> .t3-page-ce-body').first().removeClass('t3-page-ce-body-active');
+
+				var gridTable = this.select('> .t3-page-ce-body table.t3-gridTable').first();
+				if(gridTable){
+					gridTable.select('> tbody > tr > td > .t3-page-colHeader > .t3-page-colHeader-icons').removeClass('t3-page-colHeader-icons-active');
+				}
 			});
 		});
 

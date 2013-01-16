@@ -106,6 +106,12 @@ class tx_gridelements_ajax {
 			$recordList = t3lib_div::makeInstance('localRecordList');
 
 			$recordList->start($row['pid'], $table, 0, '', '', 10);
+
+//			$recordList->dontShowClipControlPanels = false;
+			$recordList->clipObj = t3lib_div::makeInstance('t3lib_clipboard');
+			$recordList->showClipboard = true;
+			$recordList->clipObj->current = 'normal';
+
 			$recordList->generateList();
 			$recordList->calcPerms = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages',$row['pid']));
 

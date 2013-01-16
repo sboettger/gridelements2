@@ -402,6 +402,274 @@ class ux_localRecordList extends localRecordList {
 	}
 
 	/**
+	 * Creates the control panel for a single record in the listing.
+	 *
+	 * @param	string		The table
+	 * @param	array		The record for which to make the control panel.
+	 * @return	string		HTML table with the control panel (unless disabled)
+	 */
+	function makeControl($table,$row,$level)	{
+		if ($this->dontShowClipControlPanels)	return '';
+
+		$rowUid = $row['uid'];
+		if (t3lib_extMgm::isLoaded('version') && isset($row['_ORIG_uid'])) {
+			$rowUid = $row['_ORIG_uid'];
+		}
+
+		// Initialize:
+		t3lib_div::loadTCA($table);
+		$cells=array();
+
+		// If the listed table is 'pages' we have to request the permission settings for each page:
+		if ($table=='pages')	{
+			$localCalcPerms = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages',$row['uid']));
+		}
+
+		// This expresses the edit permissions for this particular element:
+		$permsEdit = ($table=='pages' && ($localCalcPerms&2)) || ($table!='pages' && ($this->calcPerms&16));
+
+		// "Show" link (only pages and tt_content elements)
+		if ($table=='pages' || $table=='tt_content')	{
+			$params='&edit['.$table.']['.$row['uid'].']=edit';
+			$cells['view'] = '<a href="#" onclick="' . htmlspecialchars(t3lib_BEfunc::viewOnClick(
+					$table=='tt_content' ? $this->id . '#' . $row['uid'] : $row['uid'],
+					$this->backPath)
+			) . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:labels.showPage', TRUE) . '">' .
+				t3lib_iconWorks::getSpriteIcon('actions-document-view') . '</a>';
+		} elseif(!$this->table) {
+			$cells['view'] = $this->spaceIcon;
+		}
+
+		// "Edit" link: ( Only if permissions to edit the page-record of the content of the parent page ($this->id)
+		if ($permsEdit)	{
+			$params='&edit['.$table.']['.$row['uid'].']=edit';
+			$cells['edit'] = '<a href="#" onclick="'.htmlspecialchars(t3lib_BEfunc::editOnClick($params, $this->backPath, -1)) .
+				'" title="' . $GLOBALS['LANG']->getLL('edit', TRUE) . '">' .
+				( $GLOBALS['TCA'][$table]['ctrl']['readOnly'] ? t3lib_iconWorks::getSpriteIcon('actions-document-open-read-only') : t3lib_iconWorks::getSpriteIcon('actions-document-open')) .
+				'</a>';
+		} elseif(!$this->table) {
+			$cells['edit'] = $this->spaceIcon;
+		}
+
+		// "Move" wizard link for pages/tt_content elements:
+#		t3lib_utility_Debug::debug($level);
+		if ((($table=="tt_content" && $permsEdit) || ($table=='pages')) && $level == 0)	{
+			$cells['move'] = '<a href="#" onclick="' .
+				htmlspecialchars(
+					'return jumpExt(\'' . $this->backPath . 'move_el.php?table=' . $table . '&uid='.$row['uid'] . '\');'
+				) .'" title="' . $GLOBALS['LANG']->getLL('move_' . ($table == 'tt_content' ? 'record' : 'page'), TRUE) . '">' .
+				($table == 'tt_content' ? t3lib_iconWorks::getSpriteIcon('actions-document-move') : t3lib_iconWorks::getSpriteIcon('actions-page-move')) .
+				'</a>';
+		} elseif(!$this->table || $level > 0) {
+			$cells['move'] = $this->spaceIcon;
+		}
+
+		// If the extended control panel is enabled OR if we are seeing a single table:
+		if ($GLOBALS['SOBE']->MOD_SETTINGS['bigControlPanel'] || $this->table)	{
+
+			// "Info": (All records)
+			$cells['viewBig'] = '<a href="#" onclick="' . htmlspecialchars(
+				'top.launchView(\'' . $table . '\', \''.$row['uid'] . '\'); return false;'
+			) . '" title="' . $GLOBALS['LANG']->getLL('showInfo', TRUE) . '">'.
+				t3lib_iconWorks::getSpriteIcon('actions-document-info') .
+				'</a>';
+
+			// If the table is NOT a read-only table, then show these links:
+			if (!$GLOBALS['TCA'][$table]['ctrl']['readOnly']) {
+
+				// "Revert" link (history/undo)
+				$cells['history'] = '<a href="#" onclick="' . htmlspecialchars(
+					'return jumpExt(\'' . $this->backPath . 'show_rechis.php?element=' . rawurlencode($table . ':' . $row['uid']) . '\',\'#latest\');') .
+					'" title="' . $GLOBALS['LANG']->getLL('history', TRUE) . '">'.
+					t3lib_iconWorks::getSpriteIcon('actions-document-history-open') .
+					'</a>';
+
+				// Versioning:
+				if (t3lib_extMgm::isLoaded('version') && !t3lib_extMgm::isLoaded('workspaces')) {
+					$vers = t3lib_BEfunc::selectVersionsOfRecord($table, $row['uid'], 'uid', $GLOBALS['BE_USER']->workspace, FALSE, $row);
+					if (is_array($vers))	{	// If table can be versionized.
+						$versionIcon = 'no-version';
+						if (count($vers) > 1) {
+							$versionIcon = count($vers) - 1;
+						}
+
+						$cells['version'] = '<a href="' . htmlspecialchars($this->backPath . t3lib_extMgm::extRelPath('version') . 'cm1/index.php?table=' . rawurlencode($table) . '&uid=' . rawurlencode($row['uid'])) . '" title="' . $GLOBALS['LANG']->getLL('displayVersions', TRUE) . '">' .
+							t3lib_iconWorks::getSpriteIcon('status-version-' . $versionIcon) .
+							'</a>';
+					} elseif(!$this->table) {
+						$cells['version'] = $this->spaceIcon;
+					}
+				}
+
+				// "Edit Perms" link:
+				if ($table == 'pages' && $GLOBALS['BE_USER']->check('modules','web_perm') && t3lib_extMgm::isLoaded('perm'))	{
+					$cells['perms'] =
+						'<a href="' .
+							htmlspecialchars(
+								t3lib_extMgm::extRelPath('perm') . 'mod1/index.php' .
+									'?id=' . $row['uid'] . '&return_id=' . $row['uid'] . '&edit=1'
+							) .
+							'" title="' . $GLOBALS['LANG']->getLL('permissions', TRUE) .
+							'">'.
+							t3lib_iconWorks::getSpriteIcon('status-status-locked') .
+							'</a>';
+				} elseif((!$this->table && $GLOBALS['BE_USER']->check('modules','web_perm')) || $level > 0) {
+					$cells['perms'] = $this->spaceIcon;
+				}
+				// "New record after" link (ONLY if the records in the table are sorted by a "sortby"-row or if default values can depend on previous record):
+				if ($GLOBALS['TCA'][$table]['ctrl']['sortby'] || $GLOBALS['TCA'][$table]['ctrl']['useColumnsForDefaultValues']) {
+					if (
+						($table!='pages' && ($this->calcPerms&16)) || 	// For NON-pages, must have permission to edit content on this parent page
+						($table=='pages' && ($this->calcPerms&8))		// For pages, must have permission to create new pages here.
+					)	{
+
+						if ($this->showNewRecLink($table))	{
+							$params='&edit['.$table.']['.(-($row['_MOVE_PLH']?$row['_MOVE_PLH_uid']:$row['uid'])).']=new';
+							$cells['new'] = '<a href="#" onclick="' . htmlspecialchars(
+								t3lib_BEfunc::editOnClick($params, $this->backPath, -1)) .
+								'" title="' . $GLOBALS['LANG']->getLL('new' . ($table == 'pages '? 'Page' : 'Record'), TRUE) . '">' .
+								($table == 'pages' ? t3lib_iconWorks::getSpriteIcon('actions-page-new') : t3lib_iconWorks::getSpriteIcon('actions-document-new')) .
+								'</a>';
+						}
+					}
+				} elseif(!$this->table) {
+					$cells['new'] = $this->spaceIcon;
+				}
+
+				// "Up/Down" links
+				if ($permsEdit && $GLOBALS['TCA'][$table]['ctrl']['sortby']  && !$this->sortField && !$this->searchLevels) {
+					if (isset($this->currentTable['prev'][$row['uid']]))	{	// Up
+						$params='&cmd['.$table.']['.$row['uid'].'][move]='.$this->currentTable['prev'][$row['uid']];
+						$cells['moveUp'] = '<a href="#" onclick="' . htmlspecialchars(
+							'return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');'
+						) .'" title="'.$GLOBALS['LANG']->getLL('moveUp', TRUE) . '">' .
+							t3lib_iconWorks::getSpriteIcon('actions-move-up') .
+							'</a>';
+					} else {
+						$cells['moveUp'] = $this->spaceIcon;
+					}
+					if ($this->currentTable['next'][$row['uid']])	{	// Down
+						$params='&cmd['.$table.']['.$row['uid'].'][move]='.$this->currentTable['next'][$row['uid']];
+						$cells['moveDown']='<a href="#" onclick="'.htmlspecialchars('return jumpToUrl(\''.$GLOBALS['SOBE']->doc->issueCommand($params,-1).'\');').'" title="'.$GLOBALS['LANG']->getLL('moveDown', TRUE) . '">' .
+							t3lib_iconWorks::getSpriteIcon('actions-move-down') .
+							'</a>';
+					} else {
+						$cells['moveDown'] = $this->spaceIcon;
+					}
+				} elseif(!$this->table) {
+					$cells['moveUp']  = $this->spaceIcon;
+					$cells['moveDown'] = $this->spaceIcon;
+				}
+
+				// "Hide/Unhide" links:
+				$hiddenField = $GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled'];
+				if ($permsEdit && $hiddenField && $GLOBALS['TCA'][$table]['columns'][$hiddenField] && (!$GLOBALS['TCA'][$table]['columns'][$hiddenField]['exclude'] || $GLOBALS['BE_USER']->check('non_exclude_fields', $table . ':' . $hiddenField))) {
+					if ($row[$hiddenField])	{
+						$params = '&data[' . $table . '][' . $rowUid . '][' . $hiddenField . ']=0';
+						$cells['hide']='<a href="#" onclick="' . htmlspecialchars('return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');') . '" title="'.$GLOBALS['LANG']->getLL('unHide' . ($table == 'pages' ? 'Page' : ''), TRUE) . '">' .
+							t3lib_iconWorks::getSpriteIcon('actions-edit-unhide') .
+							'</a>';
+					} else {
+						$params = '&data[' . $table . '][' . $rowUid . '][' . $hiddenField . ']=1';
+						$cells['hide']='<a href="#" onclick="' . htmlspecialchars('return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');') . '" title="' . $GLOBALS['LANG']->getLL('hide' . ($table == 'pages' ? 'Page' : ''), TRUE) . '">' .
+							t3lib_iconWorks::getSpriteIcon('actions-edit-hide') .
+							'</a>';
+					}
+				} elseif(!$this->table) {
+					$cells['hide'] = $this->spaceIcon;
+				}
+
+				// "Delete" link:
+				if (($table=='pages' && ($localCalcPerms&4)) || ($table!='pages' && ($this->calcPerms&16))) {
+					$titleOrig = t3lib_BEfunc::getRecordTitle($table,$row,FALSE,TRUE);
+					$title = t3lib_div::slashJS(t3lib_div::fixed_lgd_cs($titleOrig, $this->fixedL), 1);
+					$params = '&cmd['.$table.']['.$row['uid'].'][delete]=1';
+
+					$refCountMsg = t3lib_BEfunc::referenceCount(
+						$table,
+						$row['uid'],
+						' ' . $GLOBALS['LANG']->sL(
+							'LLL:EXT:lang/locallang_core.xml:labels.referencesToRecord'
+						),
+						$this->getReferenceCount($table, $row['uid'])
+					) .
+						t3lib_BEfunc::translationCount($table, $row['uid'], ' ' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.xml:labels.translationsOfRecord'));
+					$cells['delete'] = '<a href="#" onclick="' . htmlspecialchars('if (confirm(' . $GLOBALS['LANG']->JScharCode($GLOBALS['LANG']->getLL('deleteWarning') . ' "' .  $title . '" ' . $refCountMsg) . ')) {jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');} return false;') . '" title="' . $GLOBALS['LANG']->getLL('delete', TRUE) . '">' .
+						t3lib_iconWorks::getSpriteIcon('actions-edit-delete') .
+						'</a>';
+				} elseif(!$this->table) {
+					$cells['delete'] = $this->spaceIcon;
+				}
+
+				// "Levels" links: Moving pages into new levels...
+				if ($permsEdit && $table=='pages' && !$this->searchLevels)	{
+
+					// Up (Paste as the page right after the current parent page)
+					if ($this->calcPerms&8)	{
+						$params='&cmd['.$table.']['.$row['uid'].'][move]='.-$this->id;
+						$cells['moveLeft'] = '<a href="#" onclick="' . htmlspecialchars('return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');') . '" title="' . $GLOBALS['LANG']->getLL('prevLevel', TRUE) . '">' .
+							t3lib_iconWorks::getSpriteIcon('actions-move-left') .
+							'</a>';
+					}
+					// Down (Paste as subpage to the page right above)
+					if ($this->currentTable['prevUid'][$row['uid']])	{
+						$localCalcPerms = $GLOBALS['BE_USER']->calcPerms(t3lib_BEfunc::getRecord('pages',$this->currentTable['prevUid'][$row['uid']]));
+						if ($localCalcPerms&8)	{
+							$params='&cmd['.$table.']['.$row['uid'].'][move]='.$this->currentTable['prevUid'][$row['uid']];
+							$cells['moveRight'] = '<a href="#" onclick="' . htmlspecialchars('return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');') . '" title="' . $GLOBALS['LANG']->getLL('nextLevel', TRUE) . '">' .
+								t3lib_iconWorks::getSpriteIcon('actions-move-right') .
+								'</a>';
+						} else {
+							$cells['moveRight'] = $this->spaceIcon;
+						}
+					} else {
+						$cells['moveRight'] = $this->spaceIcon;
+					}
+				} elseif(!$this->table) {
+					$cells['moveLeft'] = $this->spaceIcon;
+					$cells['moveRight'] = $this->spaceIcon;
+				}
+			}
+		}
+
+
+		/**
+		 * @hook			recStatInfoHooks: Allows to insert HTML before record icons on various places
+		 * @date			2007-09-22
+		 * @request		Kasper Skårhøj  <kasper2007@typo3.com>
+		 */
+		if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks']))	{
+			$stat='';
+			$_params = array($table,$row['uid']);
+			foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks'] as $_funcRef)	{
+				$stat.=t3lib_div::callUserFunction($_funcRef,$_params,$this);
+			}
+			$cells['stat'] = $stat;
+		}
+
+		/**
+		 * @hook			makeControl: Allows to change control icons of records in list-module
+		 * @date			2007-11-20
+		 * @request		Bernhard Kraft  <krafbt@kraftb.at>
+		 * @usage		This hook method gets passed the current $cells array as third parameter. This array contains values for the icons/actions generated for each record in Web>List. Each array entry is accessible by an index-key. The order of the icons is dependend on the order of those array entries.
+		 */
+		if(is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'])) {
+			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'] as $classData) {
+				$hookObject = t3lib_div::getUserObj($classData);
+				if(!($hookObject instanceof localRecordList_actionsHook))	{
+					throw new UnexpectedValueException('$hookObject must implement interface localRecordList_actionsHook', 1195567840);
+				}
+				$cells = $hookObject->makeControl($table, $row, $cells, $this);
+			}
+		}
+
+		// Compile items into a DIV-element:
+		return '
+											<!-- CONTROL PANEL: '.$table.':'.$row['uid'].' -->
+											<div class="typo3-DBctrl">'.implode('',$cells).'</div>';
+	}
+
+	/**
 	 * Rendering a single row for the list
 	 *
 	 * @param	string		Table name
@@ -481,7 +749,7 @@ class ux_localRecordList extends localRecordList {
 				} elseif ($fCol == '_REF_') {
 					$theData[$fCol] = $this->createReferenceHtml($table, $row['uid']);
 				} elseif ($fCol == '_CONTROL_') {
-					$theData[$fCol]=$this->makeControl($table,$row);
+					$theData[$fCol]=$this->makeControl($table,$row,$level);
 				} elseif ($fCol == '_AFTERCONTROL_' || $fCol == '_AFTERREF_') {
 					$theData[$fCol] = '&nbsp;';
 				} elseif ($fCol == '_CLIPBOARD_') {
