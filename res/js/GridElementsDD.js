@@ -635,25 +635,26 @@ GridElementsDD = function() {
 					title: TYPO3.l10n.localize('tx_gridelements_js.copyfrompage'),
 					cn: {
 						tag:'span',
-						class: 't3-icon t3-icon-actions t3-icon-actions-document t3-icon-copyfrompage',
+						class: top.geSprites.copyfrompage,
 						html:'&nbsp;'
 					}
 				},
 				// add doc header "New" icon to a new array that collects all "New" icons
 				arrNewicons = [Ext.select('.t3-icon-document-new', true, 'typo3-docheader-row1').elements[0]];
-
+				
 			// add all other ”New" icons to array
 			Ext.each(Ext.select('.t3-icon-document-new', true, Ext.select('.t3-row-header').elements).elements, function(){
 				arrNewicons.push(this);
 			});
-
+			
 			// add new icon and bind click event
 			Ext.each(arrNewicons, function(){
-				if(this.hasOwnProperty('parent')){
-					Ext.DomHelper.insertAfter(this.parent(), newFromPageIconConf, true).on('click', newFromPageIconFunc);
+				var parent = this.parent();
+				if(parent){
+					Ext.DomHelper.insertAfter(parent, newFromPageIconConf, true).on('click', newFromPageIconFunc);
 				}
 			});
-
+			
 			//console.log('elNewFromPageIcon', elNewFromPageIcon);
 			this.isInitialized = true;
 		},

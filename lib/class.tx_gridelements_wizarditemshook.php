@@ -78,10 +78,9 @@ class tx_gridelements_wizardItemsHook implements cms_newContentElementWizardsHoo
 
 		if(empty($allowed) || in_array('gridelements_pi1', $allowed)){
 
-			// TODO: Ist this needed anyway? top_level_layout can be set in record ans page TSconfig.
-			//$excludeLayouts = $this->getExcludeLayouts($container, $parentObject);
+			$excludeLayouts = $this->getExcludeLayouts($container, $parentObject);
 
-			$gridItems = $this->layoutSetup->getLayoutWizardItems($parentObject->colPos);
+			$gridItems = $this->layoutSetup->getLayoutWizardItems($parentObject->colPos, $excludeLayouts);
 			$this->addGridItemsToWizard($gridItems, $wizardItems);
 		}
 

@@ -223,11 +223,12 @@ class tx_gridelements_layoutsetup {
 	 *
 	 * @return  array
 	 */
-	public function getLayoutWizardItems($colPos) {
+	public function getLayoutWizardItems($colPos, $excludeLayouts = array()) {
 		$wizardItems = array();
+		$excludeLayouts = array_flip(t3lib_div::trimExplode(',', $excludeLayouts));
 		foreach ($this->layoutSetup as $layoutId => $item) {
 
-			if ($colPos == -1 && $item['top_level_layout']) {
+			if (($colPos == -1 && $item['top_level_layout']) || array_key_exists($item['uid'], $excludeLayouts)) {
 				continue;
 			}
 

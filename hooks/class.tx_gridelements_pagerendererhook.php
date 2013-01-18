@@ -152,7 +152,16 @@ class tx_gridelements_pagerendererhook {
 						}
 					}
 				}
-
+				
+				// add custom sprite icons
+				$geIcons = array(  
+				     'extensions-gridelements-copyfrompage'
+				);
+				t3lib_SpriteManager::addIconSprite(
+					$geIcons,
+					t3lib_extMgm::siteRelPath('gridelements') . 'res/css/t3skin_override.css'
+				);
+				
 				// add Ext.onReady() code from file
 				$pageRenderer->addExtOnReadyCode(
 					// add some more JS here
@@ -176,14 +185,19 @@ class tx_gridelements_pagerendererhook {
 							'insert_ext_baseurl_here',
 							// set current server time
 							'insert_server_time_here',
+							//
+							'top.geSprites = {};'
 						),
 						array(
 							$GLOBALS['BE_USER']->uc['dragAndDropHideNewElementWizardInfoOverlay'] ? 'top.skipDraggableDetails = true;' : 'top.skipDraggableDetails = false;',
 							// set extension path
 							t3lib_div::locationHeaderUrl('/' . t3lib_extMgm::siteRelPath('gridelements')),
-							// set current server time
-							// format matches "+new Date" in JS, accuracy in seconds is fine
+							// set current server time, format matches "+new Date" in JS, accuracy in seconds is fine
 							time() . '000',
+							// add sprite icon classes
+							"top.geSprites = {
+								copyfrompage: '" . t3lib_iconWorks::getSpriteIconClasses('extensions-gridelements-copyfrompage') . "'
+							};"
 						),
 						// load content from file
 						file_get_contents(

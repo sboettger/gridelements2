@@ -60,13 +60,13 @@ class tx_gridelements_wizarditemshookTest extends Tx_Extbase_Tests_Unit_BaseTest
 	 *
 	 * @test
 	 */
-	public function testInitWizardItems() {
+	public function testAddGridValuesToWizardItems() {
 		$ttContent = t3lib_div::makeInstance('tx_gridelements_wizardItemsHook');
 
 		$wizardItems = array();
 		$container = 0;
 		$columns = 0;
-		$ttContent->initWizardItems($wizardItems, $container, $column);
+		$ttContent->addGridValuesToWizardItems($wizardItems, $container, $column);
 		$this->assertEquals(array(), $wizardItems);
 
 		$wizardItems['common']['header'] = 'Content elements';
@@ -78,7 +78,7 @@ class tx_gridelements_wizarditemshookTest extends Tx_Extbase_Tests_Unit_BaseTest
 		$wizardItems['forms_login']['title'] = 'Login';
 		$wizardItems['forms_login']['description'] = 'Inserts a login/logout formular';
 		$expectedWizardItems = $wizardItemsForTesting = $wizardItems;
-		$ttContent->initWizardItems($wizardItemsForTesting, $container, $column);
+		$ttContent->addGridValuesToWizardItems($wizardItemsForTesting, $container, $column);
 		$this->assertEquals($expectedWizardItems, $wizardItemsForTesting);
 
 		$container = 1;
@@ -90,7 +90,7 @@ class tx_gridelements_wizarditemshookTest extends Tx_Extbase_Tests_Unit_BaseTest
 		$expectedWizardItems['forms_login']['tt_content_defValues']['tx_gridelements_container'] = 1;
 		$expectedWizardItems['forms_login']['params'] .= '&defVals[tt_content][tx_gridelements_container]=1';
 		$wizardItemsForTesting = $wizardItems;
-		$ttContent->initWizardItems($wizardItemsForTesting, $container, $column);
+		$ttContent->addGridValuesToWizardItems($wizardItemsForTesting, $container, $column);
 		$this->assertEquals($expectedWizardItems, $wizardItemsForTesting);
 
 		$container = 1;
@@ -102,7 +102,7 @@ class tx_gridelements_wizarditemshookTest extends Tx_Extbase_Tests_Unit_BaseTest
 		$expectedWizardItems['forms_login']['tt_content_defValues']['tx_gridelements_columns'] = 2;
 		$expectedWizardItems['forms_login']['params'] .= '&defVals[tt_content][tx_gridelements_columns]=2';
 		$wizardItemsForTesting = $wizardItems;
-		$ttContent->initWizardItems($wizardItemsForTesting, $container, $column);
+		$ttContent->addGridValuesToWizardItems($wizardItemsForTesting, $container, $column);
 		$this->assertEquals($expectedWizardItems, $wizardItemsForTesting);
 	}
 }
