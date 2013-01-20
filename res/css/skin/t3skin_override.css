@@ -280,22 +280,22 @@ td.t3-gridCell-unassigned div.t3-row-header div {
     display: block;
 }
 
-.t3-icon-extensions-myextension {
+.t3-icon-extensions-gridelements {
 	background-image:url(../../typo3conf/ext/gridelements/res/img/gridelements_sprite.png);
 }
 
-.t3-icon-gridelements-copyfrompage {
+.t3-icon-extensions-gridelements-copyfrompage {
 	background-position: 0 0;
 }
-.t3-icon-gridelements-pastecopy {
+.t3-icon-extensions-gridelements-pastecopy {
 	background-position: -16px 0;
 }
-.t3-icon-gridelements-pasteref {
+.t3-icon-extensions-gridelements-pasteref {
 	background-position: -32px 0;
 }
-.t3-icon-gridelements-reference {
+.t3-icon-extensions-gridelements-reference {
 	background-position: -48px 0;
 }
-.t3-icon-gridelements-someicon {
+.t3-icon-extensions-gridelements-someicon {
 	background-position: -64px 0;
 }
