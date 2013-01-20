@@ -216,4 +216,16 @@ $GLOBALS['TBE_MODULES_EXT']['xMOD_alt_clickmenu']['extendCMclasses'][]=array(
 	'name' => 'tx_gridelements_cmoptions',
 	'path' => t3lib_extMgm::extPath($_EXTKEY).'lib/class.tx_gridelements_cmoptions.php'
 );
+
+// add custom sprite icons
+$geIcons = array(
+	'extensions-gridelements-copyfrompage',
+	'extensions-gridelements-pastecopy',
+	'extensions-gridelements-pasteref',
+);
+t3lib_SpriteManager::addIconSprite(
+	$geIcons,
+	t3lib_extMgm::siteRelPath('gridelements') . 'res/css/t3skin_override.css'
+);
+
 ?>

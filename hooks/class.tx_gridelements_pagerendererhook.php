@@ -153,17 +153,6 @@ class tx_gridelements_pagerendererhook {
 					}
 				}
 				
-				// add custom sprite icons
-				$geIcons = array(  
-					'extensions-gridelements-copyfrompage',
-					'extensions-gridelements-pastecopy',
-					'extensions-gridelements-pasteref',
-				);
-				t3lib_SpriteManager::addIconSprite(
-					$geIcons,
-					t3lib_extMgm::siteRelPath('gridelements') . 'res/css/t3skin_override.css'
-				);
-				
 				// add Ext.onReady() code from file
 				$pageRenderer->addExtOnReadyCode(
 					// add some more JS here
