@@ -281,21 +281,21 @@ td.t3-gridCell-unassigned div.t3-row-header div {
 }
 
 .t3-icon-extensions-gridelements {
-	background-image:url(../../img/gridelements_sprite.png);
+	background-image:url('../../img/gridelements_sprite.png');
 }
 
-.t3-icon-extensions-gridelements-copyfrompage {
+.t3-icon-gridelements-copyfrompage {
 	background-position: 0 0;
 }
-.t3-icon-extensions-gridelements-pastecopy {
+.t3-icon-gridelements-pastecopy {
 	background-position: 0 -16px;
 }
-.t3-icon-extensions-gridelements-pasteref {
+.t3-icon-gridelements-pasteref {
 	background-position: 0 -32px;
 }
-.t3-icon-extensions-gridelements-reference {
+.t3-icon-gridelements-reference {
 	background-position: 0 -48px;
 }
-.t3-icon-extensions-gridelements-someicon {
+.t3-icon-gridelements-someicon {
 	background-position: 0 -64px;
 }
