@@ -83,7 +83,8 @@ $tempColumns = array(
 				'inlineNewButtonStyle' => 'display: inline-block;',
 			),
 			'behaviour' => array(
-				'localizeChildrenAtParentLocalization' => true,
+                'localizationMode' => 'select',
+                'localizeChildrenAtParentLocalization' => true,
 			),
 			'foreign_table' => 'tt_content',
 			'foreign_field' => 'tx_gridelements_container',
@@ -141,8 +142,10 @@ $TCA['tt_content']['ctrl']['useColumnsForDefaultValues'] .= ',tx_gridelements_co
 
 	// localize fix. S. http://forge.typo3.org/issues/37878
 // $TCA['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container,tx_gridelements_columns';
-$TCA['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container';
-$TCA['tt_content']['ctrl']['keepFields'] .= 'tx_gridelements_backend_layout,tx_gridelements_children,tx_gridelements_container,tx_gridelements_columns';
+// $TCA['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container';
+// $TCA['tt_content']['ctrl']['keepFields'] .= 'tx_gridelements_backend_layout,tx_gridelements_children,tx_gridelements_container,tx_gridelements_columns';
+
+$TCA['tt_content']['ctrl']['shadowColumnsForNewPlaceholders'] .= ',tx_gridelements_columns';
 
 $TCA['tt_content']['ctrl']['typeicon_classes']['gridelements_pi1'] = 'tcarecords-tx_gridelements_backend_layout-default';
 $TCA['tt_content']['ctrl']['typeicon_classes']['gridelements-pi1'] = 'tcarecords-tx_gridelements_backend_layout-default';

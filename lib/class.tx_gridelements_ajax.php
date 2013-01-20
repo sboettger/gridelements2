@@ -39,17 +39,16 @@ class tx_gridelements_ajax {
 	/**
 	 * Initialize method
 	 *
-	 * @param	mixed	$params		not used yet
-	 * @param	object	$ajaxObj	the parent ajax object
-	 *
+	 * @param	array $params not used yet
+	 * @param	TYPO3AJAX $ajaxObj the parent ajax object
 	 * @return void
 	 */
-	public function init($params, &$ajaxObj) {
+	public function init($params, TYPO3AJAX &$ajaxObj) {
 
 		// fill local params because that's not done in typo3/ajax.php yet ($params is always empty)
-		foreach($this->validParams as $validParam){
+		foreach ($this->validParams as $validParam){
 			$gpValue = t3lib_div::_GP($validParam);
-			if($gpValue !== NULL){
+			if ($gpValue !== NULL){
 				$this->paramValues[$validParam] = $gpValue;
 			}
 		}
@@ -63,13 +62,12 @@ class tx_gridelements_ajax {
 	/**
 	 * Creates the content depending on the 'cmd' parameter and fills $ajaxObj
 	 *
-	 * @param	object	$ajaxObj
-	 * @return	void
+	 * @param TYPO3AJAX $ajaxObj
+	 * @return void
 	 **/
-	protected function dispatch(&$ajaxObj) {
+	protected function dispatch(TYPO3AJAX &$ajaxObj) {
 		if (!is_string($this->paramValues['cmd'])) {
 			$ajaxObj->addContent('error', array('message' => 'cmd is not a string'));
-
 		} else {
 			switch ($this->paramValues['cmd']) {
 				case 'getListRows':
@@ -80,11 +78,12 @@ class tx_gridelements_ajax {
 	}
 
 	/**
+	 * get list rows
 	 *
-	 * @param	object	$ajaxObj	the parent ajax object
-	 * @return	void
+	 * @param TYPO3AJAX $ajaxObj the parent ajax object
+	 * @return void
 	 */
-	public function getListRows(&$ajaxObj) {
+	public function getListRows(TYPO3AJAX &$ajaxObj) {
 		$uid = (int) $this->getParamValue('uid');
 		if ($uid > 0) {
 			$table = (string) $this->getParamValue('table');
@@ -159,5 +158,4 @@ class tx_gridelements_ajax {
 	public function getParamValue($param) {
 		return $this->paramValues[$param];
 	}
-
 }

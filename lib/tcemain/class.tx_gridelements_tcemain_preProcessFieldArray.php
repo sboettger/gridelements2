@@ -77,7 +77,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 			$pid = intval(t3lib_div::_GET('DDinsertNew'));
 
 			if($fieldArray['tx_gridelements_backend_layout']) {
-				$GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds']['*,gridelements_pi1'] = $this->layoutSetup->getFlexformConfiguration(intval($fieldArray['tx_gridelements_backend_layout']));
+				$GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds']['*,gridelements_pi1'] = $this->layoutSetup->getFlexformConfiguration($fieldArray['tx_gridelements_backend_layout']);
 			}
 			$this->setFieldEntries($fieldArray, $pid);
 			$this->addOriginalColumnsIfRecordIsLocalized($fieldArray);

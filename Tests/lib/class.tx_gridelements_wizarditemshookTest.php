@@ -29,16 +29,23 @@ class tx_gridelements_wizarditemshookTest extends Tx_Extbase_Tests_Unit_BaseTest
 	 */
 	var $tempT3libDb;
 
+	/**
+	 * @var language
+	 */
+	protected $lang;
+
 
 
 
 
 	public function setUp() {
 		$this->tempT3libDb = $GLOBALS['TYPO3_DB'];
+		$this->lang = $GLOBALS['LANG'];
 	}
 
 	public function tearDown() {
 		$GLOBALS['TYPO3_DB'] = $this->tempT3libDb;
+		$GLOBALS['LANG'] = $this->lang;
 	}
 
 
@@ -46,13 +53,99 @@ class tx_gridelements_wizarditemshookTest extends Tx_Extbase_Tests_Unit_BaseTest
 
 
 	/**
-	 * test columns items proc func
+	 * test removing empty headers from wizard
 	 */
-	public function testManipulateWizardItems() {
-		$ttContent = t3lib_div::makeInstance('tx_gridelements_wizardItemsHook');
+	public function testRemoveEmptyHeadersFromWizard() {
+		$itemsHook = t3lib_div::makeInstance('tx_gridelements_wizardItemsHook');
 
-		$ttContent->manipulateWizardItems($wizardItems, $parentObject);
-		$this->assertEquals($expectedParams, $params);
+		$wizardItems['test']['header'] = 'Header without element';
+		$wizardItems['common']['header'] = 'Content elements';
+		$wizardItems['common_text']['title'] = 'Text';
+		$wizardItems['common_text']['description'] = 'Typical Text Element';
+		$wizardItems['common_image']['title'] = 'Images';
+		$wizardItems['common_image']['description'] = 'Amount of images';
+		$wizardItems['forms']['header'] = 'Forms';
+		$wizardItems['forms_login']['title'] = 'Login';
+		$wizardItems['forms_login']['description'] = 'Inserts a login/logout formular';
+		$expectedItems = $tempWizardItems = $wizardItems;
+		unset($expectedItems['test']);
+		$itemsHook->removeEmptyHeadersFromWizard($tempWizardItems);
+		$this->assertEquals($expectedItems, $tempWizardItems);
+	}
+
+	/**
+	 * test remove disallowed wizard items
+	 */
+	public function testRemoveDisallowedWizardItems() {
+		$itemsHook = t3lib_div::makeInstance('tx_gridelements_wizardItemsHook');
+
+		$allowed[] = 'text';
+		$allowed[] = 'login';
+		$wizardItems['common']['header'] = 'Content elements';
+		$wizardItems['common_text']['title'] = 'Text';
+		$wizardItems['common_text']['description'] = 'Typical Text Element';
+		$wizardItems['common_text']['tt_content_defValues']['CType'] = 'text';
+		$wizardItems['common_image']['title'] = 'Images';
+		$wizardItems['common_image']['description'] = 'Amount of images';
+		$wizardItems['common_image']['tt_content_defValues']['CType'] = 'image';
+		$wizardItems['forms']['header'] = 'Forms';
+		$wizardItems['forms_login']['title'] = 'Login';
+		$wizardItems['forms_login']['description'] = 'Inserts a login/logout formular';
+		$wizardItems['forms_login']['tt_content_defValues']['CType'] = 'login';
+		$expectedItems = $tempWizardItems = $wizardItems;
+		unset($expectedItems['common_image']);
+		$itemsHook->removeDisallowedWizardItems($allowed, $tempWizardItems);
+		$this->assertEquals($expectedItems, $tempWizardItems);
+	}
+
+	/**
+	 * test add grid items to wizard
+	 */
+	public function testAddGridItemsToWizard() {
+		$itemsHook = t3lib_div::makeInstance('tx_gridelements_wizardItemsHook');
+		$language = $this->getMock('language', array('sL'));
+		$language
+			->expects($this->once())
+			->method('sL')
+			->with($this->equalTo('LLL:EXT:gridelements/locallang_db.xml:tx_gridelements_backend_layout_wizard_label'))
+			->will($this->returnValue('Rasterelemente'));
+		$GLOBALS['LANG'] = $language;
+
+		$newGridItem[0]['title'] = 'News';
+		$newGridItem[0]['tll'] = '0';
+		$newGridItem[0]['uid'] = 1;
+		$newGridItem[0]['description'] = 'Inserts a news element';
+		$wizardItems['common']['header'] = 'Content elements';
+		$wizardItems['common_text']['title'] = 'Text';
+		$wizardItems['common_text']['description'] = 'Typical Text Element';
+		$wizardItems['common_image']['title'] = 'Images';
+		$wizardItems['common_image']['description'] = 'Amount of images';
+		$wizardItems['forms']['header'] = 'Forms';
+		$wizardItems['forms_login']['title'] = 'Login';
+		$wizardItems['forms_login']['description'] = 'Inserts a login/logout formular';
+		$wizardItems['gridelements']['header'] = 'Rasterelemente';
+		$wizardItems['gridelements_grid_1']['icon'] = '../typo3conf/ext/gridelements/res/img/new_content_el.gif';
+		$wizardItems['gridelements_grid_1']['params'] = '&defVals[tt_content][CType]=gridelements_pi1&defVals[tt_content][tx_gridelements_backend_layout]=1';
+		$wizardItems['gridelements_grid_1']['title'] = 'News';
+		$wizardItems['gridelements_grid_1']['description'] = 'Inserts a news element';
+		$wizardItems['gridelements_grid_1']['tt_content_defValues']['CType'] = 'gridelements_pi1';
+		$wizardItems['gridelements_grid_1']['tt_content_defValues']['tx_gridelements_backend_layout'] = 1;
+		$expectedItems = $tempWizardItems = $wizardItems;
+		$itemsHook->addGridItemsToWizard($newGridItem, $tempWizardItems);
+		$this->assertEquals($expectedItems, $tempWizardItems);
+
+		$language = $this->getMock('language', array('sL'));
+		$language
+			->expects($this->once())
+			->method('sL')
+			->with($this->equalTo('LLL:EXT:gridelements/locallang_db.xml:tx_gridelements_backend_layout_wizard_label'))
+			->will($this->returnValue('Rasterelemente'));
+		$GLOBALS['LANG'] = $language;
+		$newGridItem[0]['tll'] = '1';
+		$wizardItems['gridelements_grid_1']['params'] = '&defVals[tt_content][CType]=gridelements_pi1&defVals[tt_content][tx_gridelements_backend_layout]=1&isTopLevelLayout';
+		$expectedItems = $tempWizardItems = $wizardItems;
+		$itemsHook->addGridItemsToWizard($newGridItem, $tempWizardItems);
+		$this->assertEquals($expectedItems, $tempWizardItems);
 	}
 
 	/**

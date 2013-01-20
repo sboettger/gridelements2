@@ -39,12 +39,26 @@ class tx_gridelements_wizardItemsHook implements cms_newContentElementWizardsHoo
 	protected $layoutSetup;
 
 	/**
+	 * @var t3lib_BEfunc
+	 */
+	protected $beFunc;
+
+	/**
 	 * inject layout setup
 	 *
 	 * @param tx_gridelements_layoutsetup $layoutSetup
 	 */
 	public function injectLayoutSetup(tx_gridelements_layoutsetup $layoutSetup) {
 		$this->layoutSetup = $layoutSetup;
+	}
+
+	/**
+	 * inject BE func
+	 *
+	 * @param t3lib_BEfunc $beFunc
+	 */
+	public function injectBeFunc(t3lib_BEfunc $beFunc) {
+		$this->beFunc = $beFunc;
 	}
 
 	/**
@@ -55,6 +69,9 @@ class tx_gridelements_wizardItemsHook implements cms_newContentElementWizardsHoo
 	public function init($pageUid) {
 		if (!$this->layoutSetup instanceof tx_gridelements_layoutsetup) {
 			$this->layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup')->init($pageUid);
+		}
+		if (!$this->beFunc instanceof t3lib_BEfunc) {
+			$this->beFunc = t3lib_div::makeInstance('t3lib_BEfunc');
 		}
 	}
 
@@ -97,15 +114,15 @@ class tx_gridelements_wizardItemsHook implements cms_newContentElementWizardsHoo
 	 */
 	public function removeEmptyHeadersFromWizard(&$wizardItems) {
 		$headersWithElements = array();
-		foreach($wizardItems as $key => $wizardItem) {
+		foreach ($wizardItems as $key => $wizardItem) {
 			$isElement = strpos($key, '_', 1);
-			if($isElement){
+			if ($isElement){
 				$headersWithElements[] = substr($key, 0 , $isElement);
 			}
 		}
 		foreach($wizardItems as $key => $wizardItem) {
-			if($wizardItems[$key]['header']){
-				if(!in_array($key, $headersWithElements)){
+			if ($wizardItems[$key]['header']) {
+				if (!in_array($key, $headersWithElements)) {
 					unset($wizardItems[$key]);
 				}
 			}
@@ -121,8 +138,8 @@ class tx_gridelements_wizardItemsHook implements cms_newContentElementWizardsHoo
 	 */
 	public function removeDisallowedWizardItems($allowed, &$wizardItems) {
 		foreach($wizardItems as $key => $wizardItem) {
-			if(!$wizardItems[$key]['header']){
-				if(count($allowed) && !in_array($wizardItems[$key]['tt_content_defValues']['CType'], $allowed)){
+			if (!$wizardItems[$key]['header']) {
+				if (count($allowed) && !in_array($wizardItems[$key]['tt_content_defValues']['CType'], $allowed)){
 					unset($wizardItems[$key]);
 				}
 			}
@@ -170,7 +187,7 @@ class tx_gridelements_wizardItemsHook implements cms_newContentElementWizardsHoo
 	/**
 	 * add gridelements to wizard items
 	 *
-	 * @param array $wizardItems
+	 * @param array $gridItems
 	 * @param array $wizardItems
 	 * @return void
 	 */

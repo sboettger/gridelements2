@@ -649,13 +649,12 @@ GridElementsDD = function() {
 			
 			// add new icon and bind click event
 			Ext.each(arrNewicons, function(){
-				var parent = this.parent();
+				var parent = typeof this.parent === 'function' ? this.parent() : null;
 				if(parent){
 					Ext.DomHelper.insertAfter(parent, newFromPageIconConf, true).on('click', newFromPageIconFunc);
 				}
 			});
 			
-			//console.log('elNewFromPageIcon', elNewFromPageIcon);
 			this.isInitialized = true;
 		},
 		
@@ -755,13 +754,13 @@ GridElementsDD = function() {
 		removePasteAndRefIcons: function() {
 			// console.log('removePasteAndRefIcons reached');
 			// remove all existing paste-copy icons
-			var pasteIcons = Ext.select('.t3-icon-dd-paste-copy-into').elements;
+			var pasteIcons = Ext.select('.t3-icon-gridelements-pastecopy').elements;
 			Ext.each(pasteIcons, function(iconEl) {
 				Ext.get(iconEl).remove();
 			});
 			
 			// remove all existing paste-reference icons
-			var pasteRefIcons = Ext.select('.t3-icon-dd-paste-reference-into').elements;
+			var pasteRefIcons = Ext.select('.t3-icon-gridelements-pasteref').elements;
 			Ext.each(pasteRefIcons, function(iconEl) {
 				Ext.get(iconEl).remove();
 			});
@@ -789,52 +788,63 @@ GridElementsDD = function() {
 				
 				// dropZoneID now has this format: column-1234567x0 or DD_PAGECOLUMNx0
 				// the number after the "x" can be positive and negative, e.g. DD_PAGECOLUMNx-2 for "unused elements"
-				var firstColHeader = Ext.get(currentColHeader).select('.t3-page-colHeader-icons a:first');
-				var lastColHeader = Ext.get(currentColHeader).select('.t3-page-colHeader-icons a:last');
-
-				var pasteCopyHeaderLink = (firstColHeader.elements[0] ? firstColHeader.elements[0].cloneNode(true) : null);
-				var pasteRefHeaderLink = (firstColHeader.elements[0] ? firstColHeader.elements[0].cloneNode(true) : null);
-				var lastColHeaderLink = (lastColHeader.elements[0] ? lastColHeader.elements[0] : null);
-
-				if (pasteCopyHeaderLink) {
-					// customize copy icon
-					pasteCopyHeaderLink.title = TYPO3.l10n.localize('tx_gridelements_js.pastecopy');
-					copyHeaderIcon = Ext.get(pasteCopyHeaderLink).select('span:first').elements[0];
-					Ext.get(copyHeaderIcon).removeClass('t3-icon-document-new');
-					Ext.get(copyHeaderIcon).addClass('t3-icon-document-paste-after');
-					Ext.get(copyHeaderIcon).addClass('t3-icon-dd-paste-copy-into');
-
-					if(top.DDclipboardfilled == 'move') {
-
-						Ext.get(pasteCopyHeaderLink).set({
+				var lastColHeaderLink = Ext.get(currentColHeader).select('.t3-page-colHeader-icons a:last').elements[0];
+				
+				// add "paste copy" icon
+				var 
+					pasteCopyIconConf = {
+						tag: 'a',
+						href: '#',
+						title: TYPO3.l10n.localize('tx_gridelements_js.pastecopy'),
+						cn: {
+							tag:'span',
+							class: top.geSprites.pastecopy,
+							html:'&nbsp;'
+						}
+					},
+					pasteCopyIcon = Ext.DomHelper.insertAfter(lastColHeaderLink, pasteCopyIconConf, true);
+				
+				if(top.DDclipboardfilled == 'move'){
+					
+					// bind click event
+					pasteCopyIcon.on('click', function(){
+						GridElementsDD.ajaxThenReload(
+							top.moveURL.replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "&CB[paste]=tt_content%7C-" + clipboardItemUid + "&CB[pad]=normal"
+						);
+						return false;
+					});
+					
+				} else if(top.DDclipboardfilled == 'copy'){
+					
+					// bind click event
+					pasteCopyIcon.on('click', function(){
+						GridElementsDD.ajaxThenReload(
+							top.pasteTpl.replace('DD_REFYN', '0&DDcopy=1').replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID)
+						); 
+						return false;
+					});
+					
+					// also add "paste reference" icon in this case
+					var 
+						pasteRefIconConf = {
+							tag: 'a',
 							href: '#',
-							onclick: "GridElementsDD.ajaxThenReload('" + top.moveURL.replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "&CB[paste]=tt_content%7C-" + clipboardItemUid + "&CB[pad]=normal'); return false;"
-						});
-					}
-
-					if(top.DDclipboardfilled == 'copy') {
-
-						Ext.get(pasteCopyHeaderLink).set({
-							href: '#',
-							onclick: "GridElementsDD.ajaxThenReload('" + top.pasteTpl.replace('DD_REFYN', '0&DDcopy=1').replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "'); return false;"
-						});
-
-						// customize ref icon
-						pasteRefHeaderLink.title = TYPO3.l10n.localize('tx_gridelements_js.pasteref');
-						refHeaderIcon = Ext.get(pasteRefHeaderLink).select('span:first').elements[0];
-						Ext.get(refHeaderIcon).removeClass('t3-icon-document-new');
-						Ext.get(refHeaderIcon).addClass('t3-icon-document-paste-after');
-						Ext.get(refHeaderIcon).addClass('t3-icon-dd-paste-reference-into');
-						Ext.get(pasteRefHeaderLink).set({
-							href: '#',
-							onclick: "GridElementsDD.ajaxThenReload('" + top.pasteTpl.replace('DD_REFYN', 1).replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "'); return false;"
-						});
-
-						// insert both links
-						Ext.get(pasteRefHeaderLink).insertAfter(lastColHeaderLink);
-					}
-
-					Ext.get(pasteCopyHeaderLink).insertAfter(lastColHeaderLink);
+							title: TYPO3.l10n.localize('tx_gridelements_js.pasteref'),
+							cn: {
+								tag:'span',
+								class: top.geSprites.pasteref,
+								html:'&nbsp;'
+							}
+						},
+						pasteRefIcon = Ext.DomHelper.insertAfter(pasteCopyIcon, pasteRefIconConf, true);
+						
+					// bind click event
+					pasteRefIcon.on('click', function(){
+						GridElementsDD.ajaxThenReload(
+							top.pasteTpl.replace('DD_REFYN', 1).replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID)
+						); 
+						return false;
+					});
 				}
 			});
 		},

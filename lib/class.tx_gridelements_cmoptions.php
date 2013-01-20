@@ -10,13 +10,13 @@
 class tx_gridelements_cmoptions {
 
 	/**
-	 * @param $backRef
-	 * @param $menuItems
-	 * @param $table
-	 * @param $uid
+	 * @param clickMenu $backRef
+	 * @param array $menuItems
+	 * @param string $table
+	 * @param integer $uid
 	 * @return array
 	 */
-	public function main(&$backRef, $menuItems, $table, $uid) {
+	public function main(clickMenu &$backRef, array $menuItems, $table, $uid) {
 		global $BE_USER;
 
 		// add copied item handler to "(un)copy" link in clickmenu
@@ -45,5 +45,4 @@ class tx_gridelements_cmoptions {
 if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/lib/class.tx_gridelements_cmoptions.php'])) {
 	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/lib/class.tx_gridelements_cmoptions.php']);
 }
-
 ?>

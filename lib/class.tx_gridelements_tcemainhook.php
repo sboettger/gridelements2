@@ -150,22 +150,6 @@ class tx_gridelements_TCEmainHook {
 		$hook->processCmdmap($command, $table, $id, $value, $commandIsProcessed, $parentObj);
 	}
 
-	/**
-	 * Process all grid elements that have been copied or created in workspace.
-	 * Adjuste tx_gridelement_container to proper values for versions and placeholders
-	 *
-	 * Hook for t3lib_tcemain l. 2542
-	 *
-	 * @author: Martin R. Krause, martin.r.krause@gmx.de
-	 * @access: public
-	 *
-	 * @param $parentObj
-	 * @return void
-	 */
-	public function processCmdmap_afterFinish(&$parentObj) {
-		$hook = t3lib_div::makeInstance('tx_gridelements_tcemain_processCmdmapAfterFinish');
-		$hook->processCmdmapAfterFinish($parentObj);
-	}
 }
 
 if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/lib/class.tx_gridelements_tcemainhook.php'])) {

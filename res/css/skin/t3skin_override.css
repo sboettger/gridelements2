@@ -281,9 +281,21 @@ td.t3-gridCell-unassigned div.t3-row-header div {
 }
 
 /* additoinal sprite to t3skin via t3lib_SpriteManager */
-.t3-icon-extensions-gridelements {  
-     background-image: url('../../img/t3skin-ge-icons.png');
-}  
-.t3-icon-gridelements-copyfrompage { 
-	background-position: -0px -340px;
+.t3-icon-extensions-gridelements {
+	background-image: url('../../img/t3skin-ge-icons.png?2');
+}
+.t3-icon-gridelements-copyfrompage {
+	background-position: 0 0;
+}
+.t3-icon-gridelements-pastecopy {
+	background-position: -18px 0;
+}
+.t3-icon-gridelements-pasteref {
+	background-position: -36px 0;
+}
+.t3-icon-gridelements-reference {
+	background-position: -54px 0;
+}
+.t3-icon-gridelements-someicon {
+	background-position: -72px 0;
 }

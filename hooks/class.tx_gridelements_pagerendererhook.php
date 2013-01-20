@@ -155,7 +155,9 @@ class tx_gridelements_pagerendererhook {
 				
 				// add custom sprite icons
 				$geIcons = array(  
-				     'extensions-gridelements-copyfrompage'
+					'extensions-gridelements-copyfrompage',
+					'extensions-gridelements-pastecopy',
+					'extensions-gridelements-pasteref',
 				);
 				t3lib_SpriteManager::addIconSprite(
 					$geIcons,
@@ -196,7 +198,9 @@ class tx_gridelements_pagerendererhook {
 							time() . '000',
 							// add sprite icon classes
 							"top.geSprites = {
-								copyfrompage: '" . t3lib_iconWorks::getSpriteIconClasses('extensions-gridelements-copyfrompage') . "'
+								copyfrompage: '" . t3lib_iconWorks::getSpriteIconClasses('extensions-gridelements-copyfrompage') . "',
+								pastecopy: '" . t3lib_iconWorks::getSpriteIconClasses('extensions-gridelements-pastecopy') . "',
+								pasteref: '" . t3lib_iconWorks::getSpriteIconClasses('extensions-gridelements-pasteref') . "',
 							};"
 						),
 						// load content from file
