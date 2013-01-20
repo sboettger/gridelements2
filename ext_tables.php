@@ -226,7 +226,7 @@ $geIcons = array(
 
 t3lib_SpriteManager::addIconSprite(
 	$geIcons,
-	t3lib_extMgm::siteRelPath('gridelements') . 'res/css/t3skin_override.css'
+	t3lib_extMgm::siteRelPath('gridelements') . 'res/css/skin/t3skin_override.css'
 );
 
 ?>
