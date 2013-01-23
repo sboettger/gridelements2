@@ -147,21 +147,23 @@ class tx_gridelements_tt_content {
 	 */
 	public function deleteUnallowedContainer(array &$params, $itemUidList = '') {
 		$layoutSetups = $this->layoutSetup->getLayoutSetup();
-		$containerRecords = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-			'uid,tx_gridelements_backend_layout',
-			'tt_content',
-			'uid IN (' . $itemUidList . ')',
-			'',
-			'',
-			'',
-			'uid'
-		);
+		if($itemUidList) {
+			$containerRecords = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+				'uid,tx_gridelements_backend_layout',
+				'tt_content',
+				'uid IN (' . $itemUidList . ')',
+				'',
+				'',
+				'',
+				'uid'
+			);
 
-		foreach($params['items'] as $key => $container) {
-			$allowed = $layoutSetups[$containerRecords[$container[1]]['tx_gridelements_backend_layout']]['allowed'];
-			if($container[1] > 0 && $allowed) {
-				if(!t3lib_div::inList($allowed, $params['row']['CType']) && !t3lib_div::inList($allowed, '*')) {
-					unset($params['items'][$key]);
+			foreach($params['items'] as $key => $container) {
+				$allowed = $layoutSetups[$containerRecords[$container[1]]['tx_gridelements_backend_layout']]['allowed'];
+				if($container[1] > 0 && $allowed) {
+					if(!t3lib_div::inList($allowed, $params['row']['CType']) && !t3lib_div::inList($allowed, '*')) {
+						unset($params['items'][$key]);
+					}
 				}
 			}
 		}
@@ -192,11 +194,13 @@ class tx_gridelements_tt_content {
 	 * @return	void
 	 */
 	public function lookForChildContainersRecursively($containerIds, &$possibleContainers) {
-		$childrenOnNextLevel = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-			'uid, tx_gridelements_container',
-			'tt_content',
-			'CType=\'gridelements_pi1\' AND tx_gridelements_container IN (' . $containerIds . ')'
-		);
+		if($containerIds) {
+			$childrenOnNextLevel = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+				'uid, tx_gridelements_container',
+				'tt_content',
+				'CType=\'gridelements_pi1\' AND tx_gridelements_container IN (' . $containerIds . ')'
+			);
+		}
 
 		if (count($childrenOnNextLevel) && count($possibleContainers)) {
 			$containerIds = '';
