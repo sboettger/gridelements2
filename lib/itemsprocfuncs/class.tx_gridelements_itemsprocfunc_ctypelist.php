@@ -58,11 +58,12 @@ class tx_gridelements_itemsprocfunc_CTypeList extends tx_gridelements_itemsprocf
 	/**
 	 * Checks if a CType is allowed in this particular page or grid column - only this one column defines the allowed CTypes regardless of any parent column
 	 *
-	 * @param	array   $items: The items of the current CType list
-	 * @param	integer $pid: The id of the page we are currhently working on
-	 * @param	integer $pageColumn: The page column the element is a child of
-	 * @param	integer $gridColumn: The grid column the element is a child of
-	 * @return	array|null	$backendLayout: An array containing the data of the selected backend layout as well as a parsed version of the layout configuration
+	 * @param    array   $items: The items of the current CType list
+	 * @param    integer $pid: The id of the page we are currhently working on
+	 * @param    integer $pageColumn: The page column the element is a child of
+	 * @param    integer $gridContainerId: The ID of the current container
+	 * @param    integer $gridColumn: The grid column the element is a child of
+	 * @return    array|null    $backendLayout: An array containing the data of the selected backend layout as well as a parsed version of the layout configuration
 	 */
 	public function checkForAllowedCTypes(&$items, $pid, $pageColumn, $gridContainerId, $gridColumn) {
 		if($pageColumn >= 0) {

@@ -45,11 +45,11 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 				case 'gridelements_pi1':
 					$drawItem = FALSE;
 					$itemContent .= $this->renderCTypeGridelements($parentObject, $row, $showHidden, $deleteClause);
-				break;
+					break;
 				case 'shortcut':
 					$drawItem = FALSE;
 					$itemContent .= $this->renderCTypeShortcut($parentObject, $row, $showHidden, $deleteClause);
-				break;
+					break;
 			}
 		}
 		$headerContent = '<div id="ce' . $row['uid'] . '" class="t3-ctype-' . $row['CType'] . '">' . $headerContent . '</div>';
@@ -72,11 +72,13 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 		$singleColumn = FALSE;
 
 		// get the layout record for the selected backend layout if any
-		$layoutUid = $row['tx_gridelements_backend_layout'];
-		$layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup')
-			->init($row['pid'])->getLayoutSetup($layoutUid);
+		$gridContainerId = $row['uid'];
+		$layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup');
+		$layoutSetup->init($row['pid'])->cacheCurrentParent($gridContainerId);
+		$layoutUid = $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['tx_gridelements_backend_layout'];
+		$layout = $layoutSetup->getLayoutSetup($gridContainerId);
 
-		$parserRows = $layoutSetup['config']['rows.'];
+		$parserRows = $layout['config']['rows.'];
 
 		// if there is anything to parse, lets check for existing columns in the layout
 
@@ -84,17 +86,17 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 			$this->setMultipleColPosValues($parserRows, $colPosValues);
 		} else {
 			$singleColumn = TRUE;
-			$this->setSingleColPosItems($parentObject, $colPosValues, $row, $showHidden, $deleteClause);
+			$this->setSingleColPosItems($parentObject, $colPosValues, $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId], $showHidden, $deleteClause);
 		}
 
 		// if there are any columns, lets build the content for them
 		if (count($colPosValues) > 0) {
-			$this->renderGridColumns($parentObject, $colPosValues, $gridContent, $row, $editUidList, $singleColumn, $head, $showHidden, $deleteClause);
+			$this->renderGridColumns($parentObject, $colPosValues, $gridContent, $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId], $editUidList, $singleColumn, $head, $showHidden, $deleteClause);
 		}
 
 		// if we got a selected backend layout, we have to create the layout table now
 		if ($layoutUid && isset($layoutSetup['config'])) {
-			$itemContent = $this->renderGridLayoutTable($layoutSetup, $row, $head, $gridContent);
+			$itemContent = $this->renderGridLayoutTable($layoutSetup, $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId], $head, $gridContent);
 		} else {
 			$itemContent = '<div class="t3-gridContainer">';
 			$itemContent .= '<table border="0" cellspacing="1" cellpadding="4" width="100%" height="100%" class="t3-page-columns t3-gridTable">';
@@ -191,10 +193,10 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 			'tt_content',
 			$row['pid'],
 			'AND colPos = -1 AND tx_gridelements_container=' .
-			$row['uid'] .
-			$showHidden .
-			$deleteClause .
-			$parentObject->showLanguage
+				$row['uid'] .
+				$showHidden .
+				$deleteClause .
+				$parentObject->showLanguage
 		);
 
 		// Due to the pid being "NOT USED" in makeQueryArray we have to reset pidSelect here
@@ -256,12 +258,12 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 			'tt_content',
 			$row['pid'],
 			'AND colPos = -1 AND tx_gridelements_container=' .
-			$row['uid'] .
-			' AND tx_gridelements_columns=' .
-			$colPos .
-			$showHidden .
-			$deleteClause .
-			$parentObject->showLanguage
+				$row['uid'] .
+				' AND tx_gridelements_columns=' .
+				$colPos .
+				$showHidden .
+				$deleteClause .
+				$parentObject->showLanguage
 		);
 
 		// Due to the pid being "NOT USED" in makeQueryArray we have to reset pidSelect here
@@ -312,8 +314,8 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 			$newP = $parentObject->newContentElementOnClick(
 				$row['pid'],
 				'-1' .
-				'&tx_gridelements_container=' . $row['uid'] .
-				'&tx_gridelements_columns=' . $colPos,
+					'&tx_gridelements_container=' . $row['uid'] .
+					'&tx_gridelements_columns=' . $colPos,
 				$parentObject->lP
 			);
 		}
@@ -321,7 +323,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 			$name,
 			($parentObject->doEdit && $editUidList[$colPos])
 				? '&edit[tt_content][' . $editUidList[$colPos] . ']=edit' .
-				  $parentObject->pageTitleParamForAltDoc
+				$parentObject->pageTitleParamForAltDoc
 				: '',
 			$newP,
 			$parentObject);
@@ -386,15 +388,15 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 				? ' t3-gridContainer-' . $layoutSetup['frame']
 				: ''
 			) .
-            ($layoutSetup['top_level_layout']
-                ? ' t3-gridTLContainer'
-                : ''
-            ) .
-    		'">';
+			($layoutSetup['top_level_layout']
+				? ' t3-gridTLContainer'
+				: ''
+			) .
+			'">';
 		if ($layoutSetup['frame']) {
 			$grid .= '<h4 class="t3-gridContainer-title-' . $layoutSetup['frame'] . '">' .
-				 $this->lang->sL($layoutSetup['title'], TRUE) .
-			'</h4>';
+				$this->lang->sL($layoutSetup['title'], TRUE) .
+				'</h4>';
 		}
 		$grid .= '<table border="0" cellspacing="1" cellpadding="4" width="100%" height="100%" class="t3-page-columns t3-gridTable">';
 		// add colgroups
@@ -428,24 +430,24 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 				$colSpan = intval($columnConfig['colspan']);
 				$rowSpan = intval($columnConfig['rowspan']);
 				$grid .= '<td valign="top"' .
-				(isset($columnConfig['colspan'])
-					? ' colspan="' . $colSpan . '"'
-					: '') .
-				(isset($columnConfig['rowspan'])
-					? ' rowspan="' . $rowSpan . '"'
-					: '') .
-				'id="column-' . $row['uid'] . 'x' . $columnKey . '" class="t3-gridCell t3-page-column t3-page-column-' . $columnKey .
-				(!isset($columnConfig['colPos'])
-					? ' t3-gridCell-unassigned'
-					: '') .
-				(isset($columnConfig['colspan'])
-					? ' t3-gridCell-width' . $colSpan
-					: '') .
-				(isset($columnConfig['rowspan'])
-					? ' t3-gridCell-height' . $rowSpan
-					: '') .
-				' ' . (count($allowedCTypes) ? join(' ', $allowedCTypes) : 't3-allow-all') .
-				'">';
+					(isset($columnConfig['colspan'])
+						? ' colspan="' . $colSpan . '"'
+						: '') .
+					(isset($columnConfig['rowspan'])
+						? ' rowspan="' . $rowSpan . '"'
+						: '') .
+					'id="column-' . $row['uid'] . 'x' . $columnKey . '" class="t3-gridCell t3-page-column t3-page-column-' . $columnKey .
+					(!isset($columnConfig['colPos'])
+						? ' t3-gridCell-unassigned'
+						: '') .
+					(isset($columnConfig['colspan'])
+						? ' t3-gridCell-width' . $colSpan
+						: '') .
+					(isset($columnConfig['rowspan'])
+						? ' t3-gridCell-height' . $rowSpan
+						: '') .
+					' ' . (count($allowedCTypes) ? join(' ', $allowedCTypes) : 't3-allow-all') .
+					'">';
 
 				$grid .= ($GLOBALS['BE_USER']->uc['hideColumnHeaders'] ? '' : $head[$columnKey]) . $gridContent[$columnKey];
 				$grid .= '</td>';
@@ -478,8 +480,8 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 			'*',
 			'tt_content',
 			'pid IN (' . $itemList . ') AND colPos >= 0 ' .
-			$showHidden .
-			$deleteClause,
+				$showHidden .
+				$deleteClause,
 			'',
 			'FIND_IN_SET(pid, \'' . $itemList . '\'),colPos,sorting'
 		);
@@ -504,9 +506,9 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 			'*',
 			'tt_content',
 			'uid=' .
-			$shortcutItem .
-			$showHidden .
-			$deleteClause
+				$shortcutItem .
+				$showHidden .
+				$deleteClause
 		);
 		$collectedItems[] = $itemRow;
 	}
@@ -529,8 +531,8 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 		$isRTE = $parentObject->RTE && $parentObject->isRTEforField('tt_content', $itemRow, 'bodytext');
 		$singleElementHTML .= '<div ' .
 			($itemRow['_ORIG_uid']
-			  ? ' class="ver-element"'
-			  : '') .
+				? ' class="ver-element"'
+				: '') .
 			'>' .
 			$parentObject->tt_content_drawItem($itemRow, $isRTE) .
 			'</div>';
