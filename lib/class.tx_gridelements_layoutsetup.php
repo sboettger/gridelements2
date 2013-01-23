@@ -137,6 +137,37 @@ class tx_gridelements_layoutsetup {
 	}
 
 	/**
+	 * Caches Container-Records and their setup to avoid multiple selects of the same record during a single request
+	 *
+	 * @param int $gridContainerId The ID of the current grid container
+	 * @param bool $workSpaceOverlay Activates the workspace overlay when necessary
+	 * @return void
+	 */
+	public function cacheCurrentParent($gridContainerId = 0, $workSpaceOverlay = FALSE) {
+		if($gridContainerId) {
+			if(!$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]) {
+				$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId] = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
+					'*',
+					'tt_content',
+					'uid = ' . $gridContainerId
+				);
+				if($workSpaceOverlay == TRUE ||
+					($workSpaceOverlay == FALSE &&
+						(
+							$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['_ORIG_pid'] < 0 ||
+							$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['t3ver_stage'] != 0 ||
+							$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['t3ver_state'] != 0
+						)
+					)
+				) {
+					$originalParentElement = t3lib_BEfunc::getRecordWSOL('tt_content', $gridContainerId, '*');
+					$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId] = $originalParentElement;
+				}
+			}
+		}
+	}
+
+	/**
 	 * fetches all available columns for a certain grid container
 	 *
 	 * @param string $layoutId: The selected backend layout of the grid container

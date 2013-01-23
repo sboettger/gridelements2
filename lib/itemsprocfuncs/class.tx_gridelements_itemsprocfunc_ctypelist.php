@@ -71,17 +71,7 @@ class tx_gridelements_itemsprocfunc_CTypeList extends tx_gridelements_itemsprocf
 		} else {
 			$this->init($pid);
 			$column = $gridColumn;
-			if(!$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]) {
-				$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId] = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-					'*',
-					'tt_content',
-					'uid = ' . $gridContainerId
-				);
-				if($GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['_ORIG_pid'] < 0 || $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['t3ver_stage'] != 0 || $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['t3ver_state'] != 0) {
-					$originalParentElement = t3lib_BEfunc::getRecordWSOL('tt_content', $gridContainerId, 'tx_gridelements_backend_layout');
-					$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['tx_gridelements_backend_layout'] = $originalParentElement['tx_gridelements_backend_layout'];
-				}
-			}
+			$this->layoutSetup->cacheCurrentParent($gridContainerId);
 			$backendLayout = $this->layoutSetup->getLayoutSetup($GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['tx_gridelements_backend_layout']);
 		}
 		if(isset($backendLayout)) {

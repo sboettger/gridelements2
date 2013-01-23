@@ -69,30 +69,15 @@ class tx_gridelements_tt_content {
 	 */
 	public function columnsItemsProcFunc(&$params) {
 		$this->init($params['row']['pid']);
-		$containerUid = intval($params['row']['tx_gridelements_container']);
+		$gridContainerId = intval($params['row']['tx_gridelements_container']);
 		
-		if ($containerUid > 0) {
-			if(!$GLOBALS['tx_gridelements']['parentElement'][$containerUid]) {
-				if($params['row']['_ORIG_pid'] > 0 || $params['row']['t3ver_state'] != 0 || $params['row']['t3ver_stage'] != 0) {
-					$originalContainer = t3lib_BEfunc::getRecordWSOL('tt_content', $containerUid, 'uid');
-					if($originalContainer['_ORIG_uid']) {
-						$originalContainerUid = $originalContainer['_ORIG_uid'];
-					}
-				} else {
-					$originalContainerUid = $containerUid;
-				}
-
-				$parentLayout = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-					'tx_gridelements_backend_layout',
-					'tt_content',
-					'tt_content.uid=' . $originalContainerUid
-				);
-				
-				$GLOBALS['tx_gridelements']['parentElement'][$containerUid]['tx_gridelements_backend_layout'] = $parentLayout['tx_gridelements_backend_layout'];
+		if ($gridContainerId > 0) {
+			if($params['row']['_ORIG_pid'] > 0 || $params['row']['t3ver_state'] != 0 || $params['row']['t3ver_stage'] != 0) {
+				$workSpaceOverlay = TRUE;
 			}
-			
+			$this->layoutSetup->cacheCurrentParent($gridContainerId, $workSpaceOverlay);
 			$params['items'] = $this->layoutSetup
-				->getLayoutColumnsSelectItems($GLOBALS['tx_gridelements']['parentElement'][$containerUid]['tx_gridelements_backend_layout']);
+				->getLayoutColumnsSelectItems($GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['tx_gridelements_backend_layout']);
 				
 			if($params['row']['CType'] != '' && count($params['items']) > 0) {
 				foreach($params['items'] as $itemKey => $itemArray) {
