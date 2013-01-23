@@ -42,13 +42,13 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	 *
 	 * @param	array $fieldArray: The array of fields and values that have been saved to the datamap
 	 * @param	string $table: The name of the table the data should be saved to
-	 * @param	integer $pageUid: The uid of the page we are currently working on
+	 * @param	integer $id: The parent uid of either the page or the container we are currently working on
 	 * @param	\t3lib_TCEmain $parentObj: The parent object that triggered this hook
 	 * @return void
 	 */
-	public function preProcessFieldArray(&$fieldArray, $table, $pageUid, &$parentObj) {
-		$this->init($table, $pageUid, $parentObj);
-		$this->saveCleanedUpFieldArray($fieldArray, $pageUid);
+	public function preProcessFieldArray(&$fieldArray, $table, $id, &$parentObj) {
+		$this->init($table, $id, $parentObj);
+		$this->saveCleanedUpFieldArray($fieldArray);
 		$this->processFieldArrayForTtContent($fieldArray);
 	}
 
@@ -58,11 +58,11 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	 * @param array $fieldArray
 	 * @return array cleaned up field array
 	 */
-	public function saveCleanedUpFieldArray(array $fieldArray, $id) {
+	public function saveCleanedUpFieldArray(array $fieldArray) {
 		unset($fieldArray['pi_flexform']);
 		$changedFieldArray = $this->tceMain->compareFieldArrayWithCurrentAndUnset($this->getTable(), $this->getPageUid(), $fieldArray);
 		if ((isset($changedFieldArray['tx_gridelements_backend_layout']) && $this->getTable() == 'tt_content') || (isset($changedFieldArray['backend_layout']) && $this->getTable() == 'pages') || (isset($changedFieldArray['backend_layout_next_level']) && $this->getTable() == 'pages')) {
-			$this->setUnusedElements($changedFieldArray, $id);
+			$this->setUnusedElements($changedFieldArray);
 		}
 	}
 
@@ -222,27 +222,27 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	 * @param	array $fieldArray: The array of fields and values that have been saved to the datamap
 	 * return void
 	 */
-	public function setUnusedElements(&$fieldArray, $id) {
+	public function setUnusedElements(&$fieldArray) {
 		if ($this->getTable() == 'tt_content') {
 
-			$availableColumns = $this->getAvailableColumns($fieldArray['tx_gridelements_backend_layout'], 'tt_content', $id);
+			$availableColumns = $this->getAvailableColumns($fieldArray['tx_gridelements_backend_layout'], 'tt_content', $this->getPageUid());
 
 			$GLOBALS['TYPO3_DB']->sql_query('
 				UPDATE tt_content
 				SET colPos = -2, backupColPos = -1
-				WHERE tx_gridelements_container = ' . $id . '
+				WHERE tx_gridelements_container = ' . $this->getPageUid() . '
 				AND tx_gridelements_columns NOT IN (' . $availableColumns . ')
 			');
 			$GLOBALS['TYPO3_DB']->sql_query('
 				UPDATE tt_content
 				SET colPos = -1, backupColPos = -2
-				WHERE tx_gridelements_container = ' . $id . '
+				WHERE tx_gridelements_container = ' . $this->getPageUid() . '
 				AND tx_gridelements_columns IN (' . $availableColumns . ')
 			');
 		}
 
 		if ($this->getTable() == 'pages') {
-			$rootline = $this->beFunc->BEgetRootLine($id);
+			$rootline = $this->beFunc->BEgetRootLine($this->getPageUid());
 
 			for ($i = count($rootline); $i > 0; $i--) {
 				$page = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
@@ -252,7 +252,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 				);
 				$selectedBackendLayout = intval($page['backend_layout']);
 				$selectedBackendLayoutNextLevel = intval($page['backend_layout_next_level']);
-				if ($page['uid'] == $id) {
+				if ($page['uid'] == $this->getPageUid()) {
 					if ($fieldArray['backend_layout_next_level'] != 0) {
 						// Backend layout for subpages of the current page is set
 						$backendLayoutNextLevelUid = intval($fieldArray['backend_layout_next_level']);
@@ -262,10 +262,10 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 						$backendLayoutUid = $fieldArray['backend_layout'];
 						break;
 					}
-				} else if ($selectedBackendLayoutNextLevel == -1 && $page['uid'] != $id) {
+				} else if ($selectedBackendLayoutNextLevel == -1 && $page['uid'] != $this->getPageUid()) {
 					// Some previous page in our rootline sets layout_next to "None"
 					break;
-				} else if ($selectedBackendLayoutNextLevel > 0 && $page['uid'] != $id) {
+				} else if ($selectedBackendLayoutNextLevel > 0 && $page['uid'] != $this->getPageUid()) {
 					// Some previous page in our rootline sets some backend_layout, use it
 					$backendLayoutUid = $selectedBackendLayoutNextLevel;
 					break;
@@ -273,18 +273,18 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 			}
 
 			if (isset($fieldArray['backend_layout'])) {
-				$availableColumns = $this->getAvailableColumns($backendLayoutUid, 'pages', $id);
+				$availableColumns = $this->getAvailableColumns($backendLayoutUid, 'pages', $this->getPageUid());
 
 				$GLOBALS['TYPO3_DB']->sql_query('
 					UPDATE tt_content
 					SET backupColPos = colPos, colPos = -2
-					WHERE pid = ' . $id . '
+					WHERE pid = ' . $this->getPageUid() . '
 					AND colPos NOT IN (' . $availableColumns . ')
 				');
 				$GLOBALS['TYPO3_DB']->sql_query('
 					UPDATE tt_content
 					SET colPos = backupColPos, backupColPos = -2
-					WHERE pid = ' . $id . '
+					WHERE pid = ' . $this->getPageUid() . '
 					AND backupColPos != -2
 					AND backupColPos IN (' . $availableColumns . ')
 				');
@@ -294,7 +294,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 				$backendLayoutUid = $backendLayoutNextLevelUid ? $backendLayoutNextLevelUid : $backendLayoutUid;
 
 				$subpages = array();
-				$this->getSubpagesRecursively($id, $subpages);
+				$this->getSubpagesRecursively($this->getPageUid(), $subpages);
 
 				if (count($subpages)) {
 					foreach ($subpages as $page) {
@@ -322,15 +322,16 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	/**
 	 * gets all subpages of the current page and traverses recursivley unless backend_layout_next_level is set or unset (!= 0)
 	 *
-	 * @param   int     $id: the uid of the parent page
+	 * @param $pageUid
+	 * @param $subpages
+	 * @internal param int $id : the uid of the parent page
 	 * @return  array   $subpages: Reference to a list of all subpages
-	 *
 	 */
-	public function getSubpagesRecursively($id, &$subpages) {
+	public function getSubpagesRecursively($pageUid, &$subpages) {
 		$childPages = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 			'uid, backend_layout, backend_layout_next_level',
 			'pages',
-			'pid = ' . $id
+			'pid = ' . $pageUid
 		);
 
 		if (count($childPages)) {
