@@ -74,8 +74,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 		// get the layout record for the selected backend layout if any
 		$gridContainerId = $row['uid'];
 		$layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup');
-		$layoutSetup->init($row['pid'])->cacheCurrentParent($gridContainerId);
-		$gridElement = $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId];
+		$gridElement = $layoutSetup->init($row['pid'])->cacheCurrentParent($gridContainerId, FALSE, TRUE);
 		$layoutUid = $gridElement['tx_gridelements_backend_layout'];
 		$layout = $layoutSetup->getLayoutSetup($layoutUid);
 		$parserRows = $layout['config']['rows.'];

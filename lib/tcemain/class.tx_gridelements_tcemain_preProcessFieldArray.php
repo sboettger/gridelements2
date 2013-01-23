@@ -48,7 +48,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	 */
 	public function preProcessFieldArray(&$fieldArray, $table, $pageUid, &$parentObj) {
 		$this->init($table, $pageUid, $parentObj);
-		$this->saveCleanedUpFieldArray($fieldArray);
+		$this->saveCleanedUpFieldArray($fieldArray, $pageUid);
 		$this->processFieldArrayForTtContent($fieldArray);
 	}
 
@@ -58,11 +58,11 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	 * @param array $fieldArray
 	 * @return array cleaned up field array
 	 */
-	public function saveCleanedUpFieldArray(array $fieldArray) {
+	public function saveCleanedUpFieldArray(array $fieldArray, $id) {
 		unset($fieldArray['pi_flexform']);
 		$changedFieldArray = $this->tceMain->compareFieldArrayWithCurrentAndUnset($this->getTable(), $this->getPageUid(), $fieldArray);
 		if ((isset($changedFieldArray['tx_gridelements_backend_layout']) && $this->getTable() == 'tt_content') || (isset($changedFieldArray['backend_layout']) && $this->getTable() == 'pages') || (isset($changedFieldArray['backend_layout_next_level']) && $this->getTable() == 'pages')) {
-			$this->setUnusedElements($changedFieldArray);
+			$this->setUnusedElements($changedFieldArray, $id);
 		}
 	}
 
@@ -222,7 +222,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	 * @param	array $fieldArray: The array of fields and values that have been saved to the datamap
 	 * return void
 	 */
-	public function setUnusedElements(&$fieldArray) {
+	public function setUnusedElements(&$fieldArray, $id) {
 		if ($this->getTable() == 'tt_content') {
 
 			$availableColumns = $this->getAvailableColumns($fieldArray['tx_gridelements_backend_layout'], 'tt_content', $id);

@@ -75,9 +75,9 @@ class tx_gridelements_tt_content {
 			if($params['row']['_ORIG_pid'] > 0 || $params['row']['t3ver_state'] != 0 || $params['row']['t3ver_stage'] != 0) {
 				$workSpaceOverlay = TRUE;
 			}
-			$this->layoutSetup->cacheCurrentParent($gridContainerId, $workSpaceOverlay);
+			$gridElement = $this->layoutSetup->cacheCurrentParent($gridContainerId, $workSpaceOverlay, TRUE);
 			$params['items'] = $this->layoutSetup
-				->getLayoutColumnsSelectItems($GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['tx_gridelements_backend_layout']);
+				->getLayoutColumnsSelectItems($gridElement['tx_gridelements_backend_layout']);
 				
 			if($params['row']['CType'] != '' && count($params['items']) > 0) {
 				foreach($params['items'] as $itemKey => $itemArray) {

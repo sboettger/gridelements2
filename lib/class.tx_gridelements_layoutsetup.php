@@ -143,8 +143,8 @@ class tx_gridelements_layoutsetup {
 	 * @param bool $workSpaceOverlay Activates the workspace overlay when necessary
 	 * @return void
 	 */
-	public function cacheCurrentParent($gridContainerId = 0, $workSpaceOverlay = FALSE) {
-		if($gridContainerId) {
+	public function cacheCurrentParent($gridContainerId = 0, $workSpaceOverlay = FALSE, $doReturn = FALSE) {
+		if($gridContainerId > 0) {
 			if(!$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]) {
 				$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId] = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 					'*',
@@ -165,6 +165,9 @@ class tx_gridelements_layoutsetup {
 				}
 			}
 		}
+		if($doReturn === TRUE) {
+			return $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId];
+		};
 	}
 
 	/**
