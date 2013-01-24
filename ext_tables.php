@@ -83,8 +83,8 @@ $tempColumns = array(
 				'inlineNewButtonStyle' => 'display: inline-block;',
 			),
 			'behaviour' => array(
-                'localizationMode' => 'select',
-                'localizeChildrenAtParentLocalization' => true,
+				'localizationMode' => 'select',
+				'localizeChildrenAtParentLocalization' => true,
 			),
 			'foreign_table' => 'tt_content',
 			'foreign_field' => 'tx_gridelements_container',
@@ -136,19 +136,15 @@ t3lib_div::loadTCA('tt_content');
 t3lib_extMgm::addTCAcolumns('tt_content', $tempColumns, 1);
 t3lib_extMgm::addStaticFile($_EXTKEY, 'static/gridelements/', 'gridelements');
 
-$TCA['tt_content']['ctrl']['requestUpdate'] .= ',tx_gridelements_container';
+$TCA['tt_content']['ctrl']['requestUpdate'] .= ',tx_gridelements_container,tx_gridelements_columns,colPos';
 $TCA['tt_content']['ctrl']['typeicons']['gridelements_pi1'] = 'backend_layout.gif';
 $TCA['tt_content']['ctrl']['useColumnsForDefaultValues'] .= ',tx_gridelements_container,tx_gridelements_columns';
 
-	// localize fix. S. http://forge.typo3.org/issues/37878
-// $TCA['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container,tx_gridelements_columns';
-// $TCA['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container';
-// $TCA['tt_content']['ctrl']['keepFields'] .= 'tx_gridelements_backend_layout,tx_gridelements_children,tx_gridelements_container,tx_gridelements_columns';
+$TCA['tt_content']['ctrl']['keepFields'] .= 'tx_gridelements_backend_layout,tx_gridelements_children,tx_gridelements_container,tx_gridelements_columns';
 
-$TCA['tt_content']['ctrl']['shadowColumnsForNewPlaceholders'] .= ',tx_gridelements_columns';
+$TCA['tt_content']['ctrl']['shadowColumnsForNewPlaceholders'] .= ',tx_gridelements_container,tx_gridelements_columns';
 
 $TCA['tt_content']['ctrl']['typeicon_classes']['gridelements_pi1'] = 'tcarecords-tx_gridelements_backend_layout-default';
-$TCA['tt_content']['ctrl']['typeicon_classes']['gridelements-pi1'] = 'tcarecords-tx_gridelements_backend_layout-default';
 $TCA['tt_content']['types'][$_EXTKEY . '_pi1']['showitem'] = $TCA['tt_content']['types']['text']['showitem'];
 
 $TCA['tt_content']['columns']['colPos']['config']['itemsProcFunc'] = 'EXT:gridelements/lib/itemsprocfuncs/class.tx_gridelements_itemsprocfunc_colposlist.php:tx_gridelements_itemsprocfunc_colposlist->itemsProcFunc';

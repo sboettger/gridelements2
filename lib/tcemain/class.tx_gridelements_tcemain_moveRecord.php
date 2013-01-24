@@ -45,18 +45,21 @@ class tx_gridelements_tcemain_moveRecord extends tx_gridelements_tcemain_abstrac
 	 * @param \t3lib_TCEmain    $parentObj: The parent object that triggered this hook
 	 */
 	public function moveRecord($table, $uid, &$destPid, &$propArr, &$moveRec, $resolvedPid, &$recordWasMoved, &$parentObj) {
-	  $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_columns';
-	  if ($table == 'tt_content' && !$parentObj->isImporting) {			$cmd = t3lib_div::_GET('cmd');
-  		$originalElement = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-      	'*',
+		$GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_columns';
+		if ($table == 'tt_content' && !$parentObj->isImporting) {
+			$cmd = t3lib_div::_GET('cmd');
+			$originalElement = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
+				'*',
 				'tt_content',
 				'uid=' . $uid
-      );
-
-      $containerUpdateArray[] = $originalElement['tx_gridelements_container'];
+			);
+			if($GLOBALS['BE_USER']->workspace > 0) {
+				t3ib_BEfunc::workspaceOL('tt_content', $originalElement, $GLOBALS['BE_USER']->workspace);
+			}
+			$containerUpdateArray[] = $originalElement['tx_gridelements_container'];
 
 			if (strpos($cmd['tt_content'][$uid]['move'], 'x') !== false) {
-        $target = t3lib_div::trimExplode('x', $cmd['tt_content'][$uid]['move']);
+				$target = t3lib_div::trimExplode('x', $cmd['tt_content'][$uid]['move']);
 				$targetUid = abs(intval($target[0]));
 				$this->createUpdateArrayForSplittedElements($uid, $destPid, $targetUid, $target, $containerUpdateArray, $parentObj);
 			} else if($cmd['tt_content'][$uid]['move']) {

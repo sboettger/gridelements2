@@ -45,11 +45,13 @@ class tx_gridelements_TCEmainHook {
 	 * @return void
 	 */
 	public function processDatamap_afterDatabaseOperations($status, $table, $id, $fieldArray, &$parentObj) {
-		if (!is_array($GLOBALS['actionOnGridElement'])) $GLOBALS['actionOnGridElement'] = array();
+		if (!is_array($GLOBALS['tx_gridelements']['actionOnGridElement'])) {
+			$GLOBALS['tx_gridelements']['actionOnGridElement'] = array();
+		}
 
 		// store record for gridelements post processing after process_cmdmap
 		if ($fieldArray['CType'] == 'gridelements_pi1') {
-			$GLOBALS['actionOnGridElement'][] = array(
+			$GLOBALS['tx_gridelements']['actionOnGridElement'][] = array(
 				'table' => $table,
 				'id' => $parentObj->substNEWwithIDs[$id],
 				'value' => $fieldArray['sys_language_uid']

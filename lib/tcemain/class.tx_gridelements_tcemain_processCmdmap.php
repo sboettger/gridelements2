@@ -56,7 +56,7 @@ class tx_gridelements_tcemain_processCmdmap extends tx_gridelements_tcemain_abst
 		) {
 
 			$copyAfterDuplFields = $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'];
-			$GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_columns';
+			$GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container,tx_gridelements_columns';
 
 			$overrideArray = array();
 			if($DDcopy == 1 || $reference == 1) {
