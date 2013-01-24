@@ -75,9 +75,9 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 		$gridContainerId = $row['uid'];
 		$layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup');
 		$layoutSetup->init($row['pid'])->cacheCurrentParent($gridContainerId);
-		$layoutUid = $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['tx_gridelements_backend_layout'];
-		$layout = $layoutSetup->getLayoutSetup($gridContainerId);
-
+		$gridElement = $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId];
+		$layoutUid = $gridElement['tx_gridelements_backend_layout'];
+		$layout = $layoutSetup->getLayoutSetup($layoutUid);
 		$parserRows = $layout['config']['rows.'];
 
 		// if there is anything to parse, lets check for existing columns in the layout
@@ -86,17 +86,17 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 			$this->setMultipleColPosValues($parserRows, $colPosValues);
 		} else {
 			$singleColumn = TRUE;
-			$this->setSingleColPosItems($parentObject, $colPosValues, $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId], $showHidden, $deleteClause);
+			$this->setSingleColPosItems($parentObject, $colPosValues, $gridElement, $showHidden, $deleteClause);
 		}
 
 		// if there are any columns, lets build the content for them
 		if (count($colPosValues) > 0) {
-			$this->renderGridColumns($parentObject, $colPosValues, $gridContent, $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId], $editUidList, $singleColumn, $head, $showHidden, $deleteClause);
+			$this->renderGridColumns($parentObject, $colPosValues, $gridContent, $gridElement, $editUidList, $singleColumn, $head, $showHidden, $deleteClause);
 		}
 
 		// if we got a selected backend layout, we have to create the layout table now
-		if ($layoutUid && isset($layoutSetup['config'])) {
-			$itemContent = $this->renderGridLayoutTable($layoutSetup, $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId], $head, $gridContent);
+		if ($layoutUid && isset($layout['config'])) {
+			$itemContent = $this->renderGridLayoutTable($layout, $gridElement, $head, $gridContent);
 		} else {
 			$itemContent = '<div class="t3-gridContainer">';
 			$itemContent .= '<table border="0" cellspacing="1" cellpadding="4" width="100%" height="100%" class="t3-page-columns t3-gridTable">';
