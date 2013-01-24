@@ -114,7 +114,9 @@ class tx_gridelements_tt_content {
 			}
 		}
 
-		$this->deleteUnallowedContainer($params, $itemUidList);
+		if ($itemUidList) {
+			$this->deleteUnallowedContainer($params, $itemUidList);
+		}
 	}
 
 	/**

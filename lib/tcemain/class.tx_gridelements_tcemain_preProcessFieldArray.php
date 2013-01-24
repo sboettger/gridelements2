@@ -93,7 +93,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	 */
 	public function setFieldEntries(array &$fieldArray, $pid) {
 		if ($pid > 0) {
-			$this->setFieldEntriesForPages($fieldArray, $pid);
+			$this->setFieldEntriesForTargets($fieldArray, $pid);
 		} else if (intval($fieldArray['tx_gridelements_container']) > 0 && strpos(key($this->getTceMain()->datamap['tt_content']), 'NEW') !== false) {
 			$containerUpdateArray[] = intval($fieldArray['tx_gridelements_container']);
 			$this->doGridContainerUpdate($containerUpdateArray, $this->getTceMain(), 1);
@@ -103,32 +103,31 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 
 	/**
 	 * set initial entries to field array
-	 * this is only for NON root pages (pid=0)
 	 *
 	 * @param array $fieldArray
 	 * @param integer $pid
 	 * @return void
 	 */
-	public function setFieldEntriesForPages(array &$fieldArray, $pid) {
+	public function setFieldEntriesForTargets(array &$fieldArray, $pid) {
 		if (count($fieldArray) && strpos($fieldArray['pid'], 'x') !== false) {
 			$target = t3lib_div::trimExplode('x', $fieldArray['pid']);
 			$fieldArray['pid'] = $pid;
 			$targetUid = abs(intval($target[0]));
-			$this->setFieldEntriesForSplittedPages($fieldArray, $targetUid, $target);
+			$this->setFieldEntriesForColumnTargets($fieldArray, $targetUid, $target);
 		} else {
-			$this->setFieldEntriesForNormalPages($fieldArray);
+			$this->setFieldEntriesForSimpleTargets($fieldArray);
 		}
 	}
 
 	/**
-	 * set entries to splitted pages
+	 * set entries to column targets
 	 *
 	 * @param array $fieldArray
 	 * @param integer $targetUid
 	 * @param array $target
 	 * @return void
 	 */
-	public function setFieldEntriesForSplittedPages(array &$fieldArray, $targetUid, array $target) {
+	public function setFieldEntriesForColumnTargets(array &$fieldArray, $targetUid, array $target) {
 		if ($targetUid != $this->getPageUid()) {
 			$fieldArray['colPos'] = -1;
 			$fieldArray['sorting'] = 0;
@@ -146,12 +145,12 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	}
 
 	/**
-	 * set entries to splitted pages
+	 * set entries to simple targets
 	 *
 	 * @param array $fieldArray
 	 * @return void
 	 */
-	public function setFieldEntriesForNormalPages(array &$fieldArray) {
+	public function setFieldEntriesForSimpleTargets(array &$fieldArray) {
 		$targetElement = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 			'*',
 			'tt_content',

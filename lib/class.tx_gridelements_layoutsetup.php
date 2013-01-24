@@ -160,8 +160,7 @@ class tx_gridelements_layoutsetup {
 						)
 					)
 				) {
-					$originalParentElement = t3lib_BEfunc::getRecordWSOL('tt_content', $gridContainerId, '*');
-					$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId] = $originalParentElement;
+					t3lib_BEfunc::workspaceOL('tt_content', $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId], $GLOBALS['BE_USER']->workspace, TRUE);
 				}
 			}
 		}
