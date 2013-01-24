@@ -156,6 +156,9 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 			'tt_content',
 			'uid=' . abs($fieldArray['pid'])
 		);
+		if($GLOBALS['BE_USER']->workspace > 0) {
+			t3lib_BEfunc::workspaceOL('tt_content', $targetElement, $GLOBALS['BE_USER']->workspace, TRUE);
+		}
 		if ($targetElement['uid']) {
 			if ($targetElement['tx_gridelements_container'] > 0) {
 				$containerUpdateArray[] = $targetElement['tx_gridelements_container'];
