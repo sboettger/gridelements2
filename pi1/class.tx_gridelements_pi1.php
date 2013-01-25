@@ -160,6 +160,7 @@ class tx_gridelements_pi1 extends tslib_pibase {
 			$where = 'tx_gridelements_container = ' . $element .
 				$this->cObj->enableFields('tt_content') .
 				' AND colPos != -2
+				AND pid > 0
 				AND tx_gridelements_columns IN (' . $csvColumns . ')
 				AND sys_language_uid IN (' . $this->getSysLanguageContent() . ')';
 

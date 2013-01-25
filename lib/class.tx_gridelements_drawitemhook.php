@@ -251,7 +251,9 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	public function collectItemsForColumn(&$parentObject, &$colPos, &$row, &$showHidden, &$deleteClause) {
 		// Due to the pid being "NOT USED" in makeQueryArray we have to set pidSelect here
 		$originalPidSelect = $parentObject->pidSelect;
-		$parentObject->pidSelect = 'pid = ' . $row['pid'];
+		if ($GLOBALS['BE_USER']->workspace) {
+			$parentObject->pidSelect = 't3_origuid = 0';
+		} else $parentObject->pidSelect = 'pid = ' . $row['pid'];
 
 		$queryParts = $parentObject->makeQueryArray(
 			'tt_content',
