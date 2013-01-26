@@ -139,7 +139,7 @@ t3lib_extMgm::addStaticFile($_EXTKEY, 'static/gridelements/', 'gridelements');
 $TCA['tt_content']['ctrl']['requestUpdate'] .= ',tx_gridelements_container,tx_gridelements_columns,colPos';
 $TCA['tt_content']['ctrl']['typeicons']['gridelements_pi1'] = 'backend_layout.gif';
 $TCA['tt_content']['ctrl']['useColumnsForDefaultValues'] .= ',tx_gridelements_container,tx_gridelements_columns';
-$TCA['tt_content']['ctrl']['shadowColumnsForNewPlaceholders'] .= ',tx_gridelements_columns';
+$TCA['tt_content']['ctrl']['shadowColumnsForNewPlaceholders'] .= ',tx_gridelements_container,tx_gridelements_columns';
 $TCA['tt_content']['ctrl']['typeicon_classes']['gridelements_pi1'] = 'tcarecords-tx_gridelements_backend_layout-default';
 // $TCA['tt_content']['ctrl']['keepFields'] .= 'tx_gridelements_backend_layout,tx_gridelements_children,tx_gridelements_container,tx_gridelements_columns';
 

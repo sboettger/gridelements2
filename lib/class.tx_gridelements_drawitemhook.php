@@ -131,7 +131,6 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 					if ($itemRow){
 						$className = $itemRow['tx_gridelements_reference_container'] ? 'reference container_reference' : 'reference';
 						$shortcutContent .= '<div class="' . $className . '">';
-						//t3lib_utility_Debug::debug($itemRow);
 						$shortcutContent .= $this->renderSingleElementHTML($parentObject, $itemRow);
 						// NOTE: this is the end tag for <div class="t3-page-ce-body">
 						// because of bad (historic) conception, starting tag has to be placed inside tt_content_drawHeader()
@@ -264,6 +263,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 				$deleteClause .
 				$parentObject->showLanguage
 		);
+		
 
 		// Due to the pid being "NOT USED" in makeQueryArray we have to reset pidSelect here
 		$parentObject->pidSelect = $originalPidSelect;
@@ -485,6 +485,9 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 			'FIND_IN_SET(pid, \'' . $itemList . '\'),colPos,sorting'
 		);
 		foreach ($itemRows as $itemRow) {
+			if($GLOBALS['BE_USER']->workspace > 0) {
+				t3lib_BEfunc::workspaceOL('tt_content', $itemRow, $GLOBALS['BE_USER']->workspace);
+			}
 			$itemRow['tx_gridelements_reference_container'] = $itemRow['pid'];
 			$collectedItems[] = $itemRow;
 		}
@@ -509,6 +512,9 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 				$showHidden .
 				$deleteClause
 		);
+		if($GLOBALS['BE_USER']->workspace > 0) {
+			t3lib_BEfunc::workspaceOL('tt_content', $itemRow, $GLOBALS['BE_USER']->workspace);
+		}
 		$collectedItems[] = $itemRow;
 	}
 

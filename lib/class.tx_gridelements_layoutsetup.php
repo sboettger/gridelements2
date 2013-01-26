@@ -146,11 +146,7 @@ class tx_gridelements_layoutsetup {
 	public function cacheCurrentParent($gridContainerId = 0, $doReturn = FALSE) {
 		if($gridContainerId > 0) {
 			if(!$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]) {
-				$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId] = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-					'*',
-					'tt_content',
-					'uid = ' . $gridContainerId
-				);
+				$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId] = t3lib_BEfunc::getRecordWSOL('tt_content', $gridContainerId);
 			}
 		}
 		if($doReturn === TRUE) {
