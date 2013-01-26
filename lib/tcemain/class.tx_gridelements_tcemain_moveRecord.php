@@ -53,15 +53,12 @@ class tx_gridelements_tcemain_moveRecord extends tx_gridelements_tcemain_abstrac
 				'tt_content',
 				'uid=' . $uid
 			);
-			if($GLOBALS['BE_USER']->workspace > 0) {
-				t3ib_BEfunc::workspaceOL('tt_content', $originalElement, $GLOBALS['BE_USER']->workspace);
-			}
 			$containerUpdateArray[] = $originalElement['tx_gridelements_container'];
 
 			if (strpos($cmd['tt_content'][$uid]['move'], 'x') !== false) {
 				$target = t3lib_div::trimExplode('x', $cmd['tt_content'][$uid]['move']);
 				$targetUid = abs(intval($target[0]));
-				$this->createUpdateArrayForSplittedElements($uid, $destPid, $targetUid, $target, $containerUpdateArray, $parentObj);
+				$this->createUpdateArrayForSplitElements($uid, $destPid, $targetUid, $target, $containerUpdateArray, $parentObj);
 			} else if($cmd['tt_content'][$uid]['move']) {
 				// to be done: handle moving with the up and down arrows via list module correctly
 
@@ -75,16 +72,17 @@ class tx_gridelements_tcemain_moveRecord extends tx_gridelements_tcemain_abstrac
 	}
 
 	/**
-	 * create update array for splitted elements (tt_content)
+	 * create update array for split elements (tt_content)
 	 *
 	 * @param integer $recordUid
+	 * @param $destPid
 	 * @param integer $targetUid
 	 * @param array $target
 	 * @param array $containerUpdateArray
 	 * @param t3lib_TCEmain $tceMain
 	 * @return array UpdateArray
 	 */
-	public function createUpdateArrayForSplittedElements($recordUid, &$destPid, $targetUid, array $target, array $containerUpdateArray, t3lib_TCEmain &$tceMain) {
+	public function createUpdateArrayForSplitElements($recordUid, &$destPid, $targetUid, array $target, array $containerUpdateArray, t3lib_TCEmain &$tceMain) {
 		if ($targetUid != $recordUid && intval($target[0]) < 0) {
 			$containerUpdateArray[] = $targetUid;
 			$column = intval($target[1]);

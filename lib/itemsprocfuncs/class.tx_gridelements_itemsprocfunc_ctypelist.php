@@ -72,7 +72,7 @@ class tx_gridelements_itemsprocfunc_CTypeList extends tx_gridelements_itemsprocf
 		} else {
 			$this->init($pid);
 			$column = $gridColumn;
-			$gridElement = $this->layoutSetup->cacheCurrentParent($gridContainerId, FALSE, TRUE);
+			$gridElement = $this->layoutSetup->cacheCurrentParent($gridContainerId, TRUE);
 			$backendLayout = $this->layoutSetup->getLayoutSetup($gridElement['tx_gridelements_backend_layout']);
 		}
 		if(isset($backendLayout)) {

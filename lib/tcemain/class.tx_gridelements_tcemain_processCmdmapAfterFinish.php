@@ -45,7 +45,7 @@ class tx_gridelements_tcemain_processCmdmapAfterFinish extends tx_gridelements_t
 	 * @return void
 	 */
 	public function processCmdmapAfterFinish(&$parentObj) {
-		if(isset($GLOBALS['tx_gridelements']['actionOnGridElement']) && count($GLOBALS['tx_gridelements']['actionOnGridElement'])) {
+		/*if(isset($GLOBALS['tx_gridelements']['actionOnGridElement']) && count($GLOBALS['tx_gridelements']['actionOnGridElement'])) {
 			foreach ($GLOBALS['tx_gridelements']['actionOnGridElement'] as $action) {
 				$placeHolderRecord = t3lib_BEfunc::getRecord($action['table'], $action['id']);
 
@@ -77,7 +77,7 @@ class tx_gridelements_tcemain_processCmdmapAfterFinish extends tx_gridelements_t
 				}
 			}
 			unset($GLOBALS['actionOnGridElement']);
-		}
+		}*/
 	}
 }
 

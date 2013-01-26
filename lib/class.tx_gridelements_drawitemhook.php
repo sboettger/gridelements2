@@ -74,7 +74,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 		// get the layout record for the selected backend layout if any
 		$gridContainerId = $row['uid'];
 		$layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup');
-		$gridElement = $layoutSetup->init($row['pid'])->cacheCurrentParent($gridContainerId, FALSE, TRUE);
+		$gridElement = $layoutSetup->init($row['pid'])->cacheCurrentParent($gridContainerId, TRUE);
 		$layoutUid = $gridElement['tx_gridelements_backend_layout'];
 		$layout = $layoutSetup->getLayoutSetup($layoutUid);
 		$parserRows = $layout['config']['rows.'];
@@ -251,9 +251,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	public function collectItemsForColumn(&$parentObject, &$colPos, &$row, &$showHidden, &$deleteClause) {
 		// Due to the pid being "NOT USED" in makeQueryArray we have to set pidSelect here
 		$originalPidSelect = $parentObject->pidSelect;
-		if ($GLOBALS['BE_USER']->workspace) {
-			$parentObject->pidSelect = 't3_origuid = 0';
-		} else $parentObject->pidSelect = 'pid = ' . $row['pid'];
+		$parentObject->pidSelect = 'pid = ' . $row['pid'];
 
 		$queryParts = $parentObject->makeQueryArray(
 			'tt_content',

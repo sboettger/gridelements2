@@ -80,7 +80,6 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 				$GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds']['*,gridelements_pi1'] = $this->layoutSetup->getFlexformConfiguration($fieldArray['tx_gridelements_backend_layout']);
 			}
 			$this->setFieldEntries($fieldArray, $pid);
-			$this->addOriginalColumnsIfRecordIsLocalized($fieldArray);
 		}
 	}
 
@@ -156,9 +155,6 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 			'tt_content',
 			'uid=' . abs($fieldArray['pid'])
 		);
-		if($GLOBALS['BE_USER']->workspace > 0) {
-			t3lib_BEfunc::workspaceOL('tt_content', $targetElement, $GLOBALS['BE_USER']->workspace, TRUE);
-		}
 		if ($targetElement['uid']) {
 			if ($targetElement['tx_gridelements_container'] > 0) {
 				$containerUpdateArray[] = $targetElement['tx_gridelements_container'];
@@ -188,36 +184,11 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 				'tt_content',
 				'uid=' . $this->getPageUid()
 			);
-			if($GLOBALS['BE_USER']->workspace > 0) {
-				t3lib_BEfunc::workspaceOL('tt_content', $originalContainer, $GLOBALS['BE_USER']->workspace, TRUE);
-			}
 			$containerUpdateArray[] = $originalContainer['tx_gridelements_container'];
 			$this->doGridContainerUpdate($containerUpdateArray, $this->getTceMain(), -1);
 
 			$fieldArray['colPos'] = $this->checkForRootColumn(intval($this->getPageUid()));
 			$fieldArray['tx_gridelements_columns'] = 0;
-		}
-	}
-
-	/**
-	 * localize fix. S. http://forge.typo3.org/issues/37878
-	 *
-	 * @param array $fieldArray
-	 * @return void
-	 */
-	public function addOriginalColumnsIfRecordIsLocalized(array &$fieldArray) {
-		$cmd = t3lib_div::_GP('cmd');
-		$localize = intval($cmd['tt_content'][$fieldArray['tx_gridelements_container']]['localize']);
-		$orignalUid = intval($fieldArray['t3_origuid']);
-		if($localize && $orignalUid) {
-			$originalColumn = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-				'tx_gridelements_columns',
-				'tt_content',
-				'uid=' . $orignalUid
-			);
-			if(!empty($originalColumn['tx_gridelements_columns'])) {
-				$fieldArray['tx_gridelements_columns'] = $originalColumn['tx_gridelements_columns'];
-			}
 		}
 	}
 

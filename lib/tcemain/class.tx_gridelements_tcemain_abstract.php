@@ -177,11 +177,11 @@ class tx_gridelements_tcemain_abstract {
 	 */
 	public function doGridContainerUpdate($containerUpdateArray = array(), &$parentObj, $newElement = 0) {
 		foreach ($containerUpdateArray as $containerUid) {
-			$container = $this->layoutSetup->cacheCurrentParent($containerUid, FALSE, TRUE);
+			$container = $this->layoutSetup->cacheCurrentParent($containerUid, TRUE);
 			$fieldArray = array(
 				'tx_gridelements_children' => 'tx_gridelements_children + ' . $newElement
 			);
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tt_content', 'uid=' . ($container['_ORIG_uid'] ? $container['_ORIG_uid'] : $container['uid']), $fieldArray, 'tx_gridelements_children');
+			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tt_content', 'uid=' . $container['uid'], $fieldArray, 'tx_gridelements_children');
 		}
 	}
 }

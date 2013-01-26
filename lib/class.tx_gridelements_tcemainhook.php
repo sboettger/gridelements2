@@ -90,11 +90,12 @@ class tx_gridelements_TCEmainHook {
 	 * -2 = non used elements column
 	 * changes are applied to the field array of the parent object by reference
 	 *
-	 * @param	array           $fieldArray: The array of fields and values that have been saved to the datamap
-	 * @param	str             $table: The name of the table the data should be saved to
-	 * @param	int             $id: The uid of the page we are currently working on
-	 * @param	\t3lib_TCEmain  $parentObj: The parent object that triggered this hook
-	 * @return	void
+	 * @param $status
+	 * @param    str             $table: The name of the table the data should be saved to
+	 * @param    int             $id: The uid of the page we are currently working on
+	 * @param    array           $fieldArray: The array of fields and values that have been saved to the datamap
+	 * @param    \t3lib_TCEmain  $parentObj: The parent object that triggered this hook
+	 * @return    void
 	 */
 	public function processDatamap_postProcessFieldArray($status, $table, $id, &$fieldArray, &$parentObj) {
 		$cmd = t3lib_div::_GET('cmd');
@@ -104,7 +105,7 @@ class tx_gridelements_TCEmainHook {
 			strpos($cmd['tt_content'][key($cmd['tt_content'])]['copy'], 'x') !== FALSE &&
 			!$parentObj->isImporting
 		) {
-			$positionArray = t3lib_div::trimExplode('x', $cmd['tt_content'][key($cmd['tt_content'])]['copy']);
+			$positionArray = t3lib_div::trimexplode('x', $cmd['tt_content'][key($cmd['tt_content'])]['copy']);
 			if($positionArray[0] < 0) {
 				$parentPage = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('pid', 'tt_content', 'uid = ' . abs($positionArray[0]));
 				if($parentPage['pid']) {

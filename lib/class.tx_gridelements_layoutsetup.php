@@ -140,10 +140,10 @@ class tx_gridelements_layoutsetup {
 	 * Caches Container-Records and their setup to avoid multiple selects of the same record during a single request
 	 *
 	 * @param int $gridContainerId The ID of the current grid container
-	 * @param bool $workSpaceOverlay Activates the workspace overlay when necessary
+	 * @param bool $doReturn
 	 * @return void
 	 */
-	public function cacheCurrentParent($gridContainerId = 0, $workSpaceOverlay = FALSE, $doReturn = FALSE) {
+	public function cacheCurrentParent($gridContainerId = 0, $doReturn = FALSE) {
 		if($gridContainerId > 0) {
 			if(!$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]) {
 				$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId] = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
@@ -151,17 +151,6 @@ class tx_gridelements_layoutsetup {
 					'tt_content',
 					'uid = ' . $gridContainerId
 				);
-				if($workSpaceOverlay == TRUE ||
-					($workSpaceOverlay == FALSE &&
-						(
-							$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['_ORIG_pid'] < 0 ||
-							$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['t3ver_stage'] != 0 ||
-							$GLOBALS['tx_gridelements']['parentElement'][$gridContainerId]['t3ver_state'] != 0
-						)
-					)
-				) {
-					t3lib_BEfunc::workspaceOL('tt_content', $GLOBALS['tx_gridelements']['parentElement'][$gridContainerId], $GLOBALS['BE_USER']->workspace, TRUE);
-				}
 			}
 		}
 		if($doReturn === TRUE) {
