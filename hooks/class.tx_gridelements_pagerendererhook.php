@@ -176,8 +176,10 @@ class tx_gridelements_pagerendererhook {
 							'insert_ext_baseurl_here',
 							// set current server time
 							'insert_server_time_here',
-							//
-							'top.geSprites = {};'
+							// additional sprites
+							'top.geSprites = {};',
+							// back path
+							"top.backPath = '';"
 						),
 						array(
 							$GLOBALS['BE_USER']->uc['dragAndDropHideNewElementWizardInfoOverlay'] ? 'top.skipDraggableDetails = true;' : 'top.skipDraggableDetails = false;',
@@ -190,7 +192,8 @@ class tx_gridelements_pagerendererhook {
 								copyfrompage: '" . t3lib_iconWorks::getSpriteIconClasses('extensions-gridelements-copyfrompage') . "',
 								pastecopy: '" . t3lib_iconWorks::getSpriteIconClasses('extensions-gridelements-pastecopy') . "',
 								pasteref: '" . t3lib_iconWorks::getSpriteIconClasses('extensions-gridelements-pasteref') . "',
-							};"
+							};",
+							"top.backPath = '" . $GLOBALS['BACK_PATH'] . "';"
 						),
 						// load content from file
 						file_get_contents(

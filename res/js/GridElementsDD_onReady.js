@@ -5,6 +5,7 @@ if(typeof GridElementsDD === "undefined"){
 	// setting piped in here from PHP
 	top.skipDraggableDetails = 0;
 	top.geSprites = {};
+	top.backPath = '';
 
 	if(Ext.get('ext-cms-layout-db-layout-php')) {
 

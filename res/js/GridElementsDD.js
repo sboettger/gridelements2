@@ -589,6 +589,12 @@ GridElementsDD = function() {
 						break;
 					}
 				}
+				
+				// this is called when you click an item in the content selection wizard (popup)
+				// yes, this one has to be a global!
+				window.setFormValueFromBrowseWin = function(colPosUidPid, tableUid, headerText){
+					Ext.Msg.alert('Wizard Results: ', 'window.setFormValueFromBrowseWin() reached. <br>colPos = ' + colPosUidPid.split(',')[0] + '<br>uidPid = ' + colPosUidPid.split(',')[1] + '<br>tableUid = ' + tableUid + '<br>headerText = ' + headerText);
+				}
 			});
 			
 			// add draggers for icons with class x-dd-makedragger: <div class="x-dd-droptargetgroup" style="left: 100px; top: 100px;"></div>
@@ -626,21 +632,22 @@ GridElementsDD = function() {
 			
 			// add "new reference from other page" icons
 			var
-				newFromPageIconFunc = function(){
-					Ext.Msg.alert('Partial Success', 'This icon will open a wizard to get content elements from other pages ... TBD!');
-				},
 				newFromPageIconConf = {
 					tag: 'a',
 					href: '#',
 					title: TYPO3.l10n.localize('tx_gridelements_js.copyfrompage'),
+					rel: '',
 					cn: {
-						tag:'span',
+						tag: 'span',
 						class: top.geSprites.copyfrompage,
-						html:'&nbsp;'
+						html: '&nbsp;'
 					}
 				},
 				// add doc header "New" icon to a new array that collects all "New" icons
-				arrNewicons = [Ext.select('.t3-icon-document-new', true, 'typo3-docheader-row1').elements[0]];
+				// arrNewicons = [Ext.select('.t3-icon-document-new', true, 'typo3-docheader-row1').elements[0]];
+				
+				// for now: no "get copy from ..." icon on top of page
+				arrNewicons = [];
 				
 			// add all other ”New" icons to array
 			Ext.each(Ext.select('.t3-icon-document-new', true, Ext.select('.t3-row-header').elements).elements, function(){
@@ -650,8 +657,22 @@ GridElementsDD = function() {
 			// add new icon and bind click event
 			Ext.each(arrNewicons, function(){
 				var parent = typeof this.parent === 'function' ? this.parent() : null;
+				newFromPageIconConf.rel = '';
 				if(parent){
-					Ext.DomHelper.insertAfter(parent, newFromPageIconConf, true).on('click', newFromPageIconFunc);
+					var 
+						onclickAttr = parent.dom.getAttribute('onclick'),
+						colPosMatch = onclickAttr.match(/colPos=([-\d]+)/),
+						uidPidMatch = onclickAttr.match(/uid_pid=([-\d]+)/),
+						colPos = colPosMatch !== null && typeof colPosMatch != 'undefined' ? colPosMatch[1] : '',
+						uidPid = uidPidMatch !== null && typeof uidPidMatch != 'undefined' ? uidPidMatch[1] : '';
+					
+					newFromPageIconConf.rel = colPos + ',' + uidPid;
+					Ext.DomHelper.insertAfter(parent, newFromPageIconConf, true).on('click', function(targetEvent, targetEl){
+						var url = top.backPath + 'browser.php?mode=db&bparams=' + targetEl.parentNode.rel + '|||tt_content|';
+						var browserWin = window.open(url, "Typo3WinBrowser", "height=650,width=650,status=0,menubar=0,resizable=1,scrollbars=1");
+						browserWin.focus();
+					}
+				);
 				}
 			});
 			
