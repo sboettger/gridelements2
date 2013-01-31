@@ -252,11 +252,12 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 		$originalPidSelect = $parentObject->pidSelect;
 		$parentObject->pidSelect = 'pid = ' . $row['pid'];
 
+		$specificUid = tx_gridelements_helper::getInstance()->getSpecificUid($row);
 		$queryParts = $parentObject->makeQueryArray(
 			'tt_content',
 			$row['pid'],
 			'AND colPos = -1 AND tx_gridelements_container=' .
-				($GLOBALS['BE_USER']->workspace > 0 ? $row['_ORIG_uid'] : $row['uid']) .
+				$specificUid .
 				' AND tx_gridelements_columns=' .
 				$colPos .
 				$showHidden .
@@ -309,14 +310,13 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	 * @return void
 	 */
 	public function setColumnHeader(&$parentObject, &$head, &$colPos, &$row, &$name, &$editUidList) {
+		$specificUid = tx_gridelements_helper::getInstance()->getSpecificUid($row);
+
 		if ($colPos < 32768) {
 			$newP = $parentObject->newContentElementOnClick(
 				$row['pid'],
 				'-1' .
-					'&tx_gridelements_container=' . 
-					($GLOBALS['BE_USER']->workspace > 0 ? 
-					    $row['_ORIG_uid'] :
-					    $row['uid']).
+					'&tx_gridelements_container=' . $specificUid .
 					'&tx_gridelements_columns=' . $colPos,
 				$parentObject->lP
 			);
@@ -385,6 +385,8 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	 * @return string
 	 */
 	public function renderGridLayoutTable($layoutSetup, $row, $head, $gridContent) {
+		$specificUid = tx_gridelements_helper::getInstance()->getSpecificUid($row);
+
 		$grid = '<div class="t3-gridContainer' .
 			($layoutSetup['frame']
 				? ' t3-gridContainer-' . $layoutSetup['frame']
@@ -438,7 +440,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 					(isset($columnConfig['rowspan'])
 						? ' rowspan="' . $rowSpan . '"'
 						: '') .
-					'id="column-' . ($GLOBALS['BE_USER']->workspace > 0 ? $row['_ORIG_uid'] : $row['uid']) . 'x' . $columnKey . '" class="t3-gridCell t3-page-column t3-page-column-' . $columnKey .
+					'id="column-' . $specificUid . 'x' . $columnKey . '" class="t3-gridCell t3-page-column t3-page-column-' . $columnKey .
 					(!isset($columnConfig['colPos'])
 						? ' t3-gridCell-unassigned'
 						: '') .
@@ -538,7 +540,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 			TRUE);
 		$isRTE = $parentObject->RTE && $parentObject->isRTEforField('tt_content', $itemRow, 'bodytext');
 		$singleElementHTML .= '<div ' .
-			($itemRow['_ORIG_uid']
+			(!empty($itemRow['_ORIG_uid'])
 				? ' class="ver-element"'
 				: '') .
 			'>' .
