@@ -141,7 +141,7 @@ class tx_gridelements_layoutsetup {
 	 *
 	 * @param int $gridContainerId The ID of the current grid container
 	 * @param bool $doReturn
-	 * @return void
+	 * @return void|array
 	 */
 	public function cacheCurrentParent($gridContainerId = 0, $doReturn = FALSE) {
 		if($gridContainerId > 0) {

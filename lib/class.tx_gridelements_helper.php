@@ -48,4 +48,31 @@ class tx_gridelements_helper {
 		return $retVal;
 	}
 
+	/**
+	 * Gets the uid of a record depending on the current context.
+	 * If in workspace mode, the overlay uid is used (if available),
+	 * otherwise the regular uid is used.
+	 *
+	 * @param array $record Overlayed record data
+	 * @return integer
+	 */
+	public function getSpecificUid(array $record) {
+		$specificUid = $uid = (int) $record['uid'];
+
+		if ($this->getBackendUser()->workspace > 0 && !empty($record['_ORIG_uid'])) {
+			$specificUid = (int) $record['_ORIG_uid'];
+		}
+
+		return $specificUid;
+	}
+
+	/**
+	 * Gets the current backend user.
+	 *
+	 * @return t3lib_beUserAuth
+	 */
+	public function getBackendUser() {
+		return $GLOBALS['BE_USER'];
+	}
+
 }
