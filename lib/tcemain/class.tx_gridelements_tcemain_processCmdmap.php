@@ -40,11 +40,12 @@ class tx_gridelements_tcemain_processCmdmap extends tx_gridelements_tcemain_abst
 	 * @param int               $id: The id of the record that is going to be copied
 	 * @param string            $value: The value that has been sent with the copy command
 	 * @param boolean           $commandIsProcessed: A switch to tell the parent object, if the record has been copied
-	 * @param \t3lib_TCEmain    $parentObj: The parent object that triggered this hook
+	 * @param t3lib_TCEmain     $parentObj: The parent object that triggered this hook
 	 * @return	void
 	 *
 	 */
-	public function processCmdmap($command, $table, $id, $value, &$commandIsProcessed, &$parentObj) {
+	public function processCmdmap($command, $table, $id, $value, &$commandIsProcessed, t3lib_TCEmain $parentObj) {
+		// @todo Either create a new command map type, e.g. "reference" and process it with a hook instead of using $_GET //olly
 		$DDcopy = intval(t3lib_div::_GET('DDcopy'));
 		$reference = intval(t3lib_div::_GET('reference'));
 		$containerUpdateArray = array();

@@ -409,16 +409,15 @@ class ux_localRecordList extends localRecordList {
 	 * @return	string		HTML table with the control panel (unless disabled)
 	 */
 	function makeControl($table,$row,$level)	{
-		if ($this->dontShowClipControlPanels)	return '';
-
-		$rowUid = $row['uid'];
-		if (t3lib_extMgm::isLoaded('version') && isset($row['_ORIG_uid'])) {
-			$rowUid = $row['_ORIG_uid'];
+		if ($this->dontShowClipControlPanels) {
+			return '';
 		}
+
+		$rowUid = tx_gridelements_helper::getInstance()->getSpecificUid($row);
 
 		// Initialize:
 		t3lib_div::loadTCA($table);
-		$cells=array();
+		$cells = array();
 
 		// If the listed table is 'pages' we have to request the permission settings for each page:
 		if ($table=='pages')	{
