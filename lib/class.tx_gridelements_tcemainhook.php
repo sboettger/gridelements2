@@ -44,7 +44,7 @@ class tx_gridelements_TCEmainHook {
 	 * @param t3lib_TCEmain $parentObj
 	 * @return void
 	 */
-	public function processDatamap_afterDatabaseOperations($status, $table, $id, $fieldArray, &$parentObj) {
+	public function processDatamap_afterDatabaseOperations($status, $table, $id, $fieldArray, t3lib_TCEmain $parentObj) {
 		if (!is_array($GLOBALS['tx_gridelements']['actionOnGridElement'])) {
 			$GLOBALS['tx_gridelements']['actionOnGridElement'] = array();
 		}
@@ -71,11 +71,12 @@ class tx_gridelements_TCEmainHook {
 	 * @param	array           $fieldArray: The array of fields and values that have been saved to the datamap
 	 * @param	str             $table: The name of the table the data should be saved to
 	 * @param	int             $id: The uid of the page we are currently working on
-	 * @param	\t3lib_TCEmain  $parentObj: The parent object that triggered this hook
+	 * @param	t3lib_TCEmain   $parentObj: The parent object that triggered this hook
 	 * @return void
 	 */
-	public function processDatamap_preProcessFieldArray(&$fieldArray, $table, $id, &$parentObj) {
+	public function processDatamap_preProcessFieldArray(&$fieldArray, $table, $id, t3lib_TCEmain $parentObj) {
 		if (($table == 'tt_content' || $table == 'pages') && !$parentObj->isImporting) {
+			/** @var $hook tx_gridelements_tcemain_preProcessFieldArray */
 			$hook = t3lib_div::makeInstance('tx_gridelements_tcemain_preProcessFieldArray');
 			$hook->preProcessFieldArray($fieldArray, $table, $id, $parentObj);
 		}
@@ -94,10 +95,10 @@ class tx_gridelements_TCEmainHook {
 	 * @param    str             $table: The name of the table the data should be saved to
 	 * @param    int             $id: The uid of the page we are currently working on
 	 * @param    array           $fieldArray: The array of fields and values that have been saved to the datamap
-	 * @param    \t3lib_TCEmain  $parentObj: The parent object that triggered this hook
-	 * @return    void
+	 * @param    t3lib_TCEmain   $parentObj: The parent object that triggered this hook
+	 * @return   void
 	 */
-	public function processDatamap_postProcessFieldArray($status, $table, $id, &$fieldArray, &$parentObj) {
+	public function processDatamap_postProcessFieldArray($status, $table, $id, array &$fieldArray, t3lib_TCEmain $parentObj) {
 		$cmd = t3lib_div::_GET('cmd');
 		if(count($cmd) &&
 			key($cmd) == 'tt_content' &&
@@ -128,10 +129,11 @@ class tx_gridelements_TCEmainHook {
 	 * @param array             $moveRec: An array of some values of the record that is going to be moved
 	 * @param int               $resolvedPid: The calculated id of the page the record should be moved to
 	 * @param boolean           $recordWasMoved: A switch to tell the parent object, if the record has been moved
-	 * @param \t3lib_TCEmain    $parentObj: The parent object that triggered this hook
+	 * @param t3lib_TCEmain     $parentObj: The parent object that triggered this hook
 	 *
 	 */
 	public function moveRecord($table, $uid, &$destPid, &$propArr, &$moveRec, $resolvedPid, &$recordWasMoved, &$parentObj) {
+		/** @var $hook tx_gridelements_tcemain_moveRecord */
 		$hook = t3lib_div::makeInstance('tx_gridelements_tcemain_moveRecord');
 		$hook->moveRecord($table, $uid, $destPid, $propArr, $moveRec, $resolvedPid, $recordWasMoved, $parentObj);
 	}
@@ -149,6 +151,7 @@ class tx_gridelements_TCEmainHook {
 	 *
 	 */
 	public function processCmdmap($command, $table, $id, $value, &$commandIsProcessed, &$parentObj) {
+		/** @var $hook tx_gridelements_tcemain_processCmdmap */
 		$hook = t3lib_div::makeInstance('tx_gridelements_tcemain_processCmdmap');
 		$hook->processCmdmap($command, $table, $id, $value, $commandIsProcessed, $parentObj);
 	}

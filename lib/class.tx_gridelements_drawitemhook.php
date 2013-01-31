@@ -16,6 +16,11 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	 */
 	var $lang;
 
+	/**
+	 * @var t3lib_queryGenerator
+	 */
+	protected $tree;
+
 	public function __construct() {
 		$this->lang = t3lib_div::makeInstance('language');
 		$this->lang->init($GLOBALS['BE_USER']->uc['lang']);
@@ -25,7 +30,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	 * Processes the item to be rendered before the actual example content gets rendered
 	 * Deactivates the original example content output
 	 *
-	 * @param \tx_cms_layout    $parentObject: The parent object that triggered this hook
+	 * @param tx_cms_layout     $parentObject: The parent object that triggered this hook
 	 * @param boolean           $drawItem: A switch to tell the parent object, if the item still must be drawn
 	 * @param string            $headerContent: The content of the item header
 	 * @param string            $itemContent: The content of the item itself
@@ -58,13 +63,13 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	/**
 	 * renders the HTML output for elements of the CType gridelements_pi1
 	 *
-	 * @param \tx_cms_layout    $parentObject: The parent object that triggered this hook
+	 * @param tx_cms_layout     $parentObject: The parent object that triggered this hook
 	 * @param array             $row: The current data row for this item
 	 * @param string            $showHidden: query String containing enable fields
 	 * @param string            $deleteClause: query String to check for deleted items
 	 * @return string           $itemContent: The HTML output for elements of the CType gridelements_pi1
 	 */
-	public function renderCTypeGridelements(&$parentObject, &$row, &$showHidden, &$deleteClause) {
+	public function renderCTypeGridelements(tx_cms_layout $parentObject, &$row, &$showHidden, &$deleteClause) {
 		$head = array();
 		$gridContent = array();
 		$editUidList = array();
@@ -73,6 +78,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 
 		// get the layout record for the selected backend layout if any
 		$gridContainerId = $row['uid'];
+		/** @var $layoutSetup tx_gridelements_layoutsetup */
 		$layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup');
 		$gridElement = $layoutSetup->init($row['pid'])->cacheCurrentParent($gridContainerId, TRUE);
 		$layoutUid = $gridElement['tx_gridelements_backend_layout'];
@@ -108,13 +114,13 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	/**
 	 * renders the HTML output for elements of the CType shortcut
 	 *
-	 * @param \tx_cms_layout    $parentObject: The parent object that triggered this hook
+	 * @param tx_cms_layout     $parentObject: The parent object that triggered this hook
 	 * @param array             $row: The current data row for this item
 	 * @param string            $showHidden: query String containing enable fields
 	 * @param string            $deleteClause: query String to check for deleted items
 	 * @return string           $shortcutContent: The HTML output for elements of the CType shortcut
 	 */
-	public function renderCTypeShortcut(&$parentObject, &$row, &$showHidden, &$deleteClause) {
+	public function renderCTypeShortcut(tx_cms_layout $parentObject, &$row, &$showHidden, &$deleteClause) {
 		$shortcutContent = '';
 		if ($row['records']) {
 			$shortcutItems = t3lib_div::trimExplode(',', $row['records']);
@@ -175,14 +181,14 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	/**
 	 * Directly returns the items for a single column if the rendering mode is set to single columns only
 	 *
-	 * @param \tx_cms_layout $parentObject: The parent object that triggered this hook
+	 * @param tx_cms_layout $parentObject: The parent object that triggered this hook
 	 * @param array $colPosValues: The column positions that have been found for that layout
 	 * @param array $row: The current data row for the container item
 	 * @param string $showHidden: query String containing enable fields
 	 * @param string $deleteClause: query String to check for deleted items
 	 * @return array collected items for this column
 	 */
-	public function setSingleColPosItems(&$parentObject, &$colPosValues, &$row, $showHidden, $deleteClause) {
+	public function setSingleColPosItems(tx_cms_layout $parentObject, &$colPosValues, &$row, $showHidden, $deleteClause) {
 		// Due to the pid being "NOT USED" in makeQueryArray we have to set pidSelect here
 		$originalPidSelect = $parentObject->pidSelect;
 		$parentObject->pidSelect = 'pid = ' . $row['pid'];
@@ -209,7 +215,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	/**
 	 * renders the columns of a grid layout
 	 *
-	 * @param \tx_cms_layout	$parentObject: The parent object that triggered this hook
+	 * @param tx_cms_layout		$parentObject: The parent object that triggered this hook
 	 * @param array				$colPosValues: The column positions we want to get the content for
 	 * @param array				$gridContent: The rendered content data of the grid columns
 	 * @param array				$row: The current data row for the container item
@@ -220,7 +226,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	 * @param string			$deleteClause: query String to check for deleted items
 	 * @return void
 	 */
-	public function renderGridColumns(&$parentObject, &$colPosValues, &$gridContent, &$row, &$editUidList, &$singleColumn, &$head, $showHidden, $deleteClause) {
+	public function renderGridColumns(tx_cms_layout $parentObject, &$colPosValues, &$gridContent, &$row, &$editUidList, &$singleColumn, &$head, $showHidden, $deleteClause) {
 		foreach ($colPosValues as $colPos => $values) {
 			// first we have to create the column content separately for each column
 			// so we can check for the first and the last element to provide proper sorting
@@ -241,14 +247,14 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	/**
 	 * Collects tt_content data from a single tt_content element
 	 *
-	 * @param \tx_cms_layout	$parentObject: The parent object that triggered this hook
+	 * @param tx_cms_layout		$parentObject: The parent object that triggered this hook
 	 * @param int			   	$colPos: The column position to collect the items for
 	 * @param array			 	$row: The current data row for the container item
 	 * @param string			$showHidden: query String containing enable fields
 	 * @param string			$deleteClause: query String to check for deleted items
 	 * @return array			collected items for the given column
 	 */
-	public function collectItemsForColumn(&$parentObject, &$colPos, &$row, &$showHidden, &$deleteClause) {
+	public function collectItemsForColumn(tx_cms_layout $parentObject, &$colPos, &$row, &$showHidden, &$deleteClause) {
 		// Due to the pid being "NOT USED" in makeQueryArray we have to set pidSelect here
 		$originalPidSelect = $parentObject->pidSelect;
 		$parentObject->pidSelect = 'pid = ' . $row['pid'];
@@ -276,14 +282,14 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	/**
 	 * renders a single column of a grid layout and sets the edit uid list
 	 *
-	 * @param \tx_cms_layout    $parentObject: The parent object that triggered this hook
+	 * @param tx_cms_layout     $parentObject: The parent object that triggered this hook
 	 * @param array             $items: The content data of the column to be rendered
 	 * @param int               $colPos: The column position we want to get the content for
 	 * @param array             $gridContent: The rendered content data of the grid column
 	 * @param array             $editUidList: determines if we will get edit icons or not
 	 * @return void
 	 */
-	public function renderSingleGridColumn(&$parentObject, &$items, &$colPos, &$gridContent, &$editUidList) {
+	public function renderSingleGridColumn(tx_cms_layout $parentObject, &$items, &$colPos, &$gridContent, &$editUidList) {
 		foreach ($items as $itemRow) {
 			if (is_array($itemRow)) {
 				$statusHidden = $parentObject->isDisabled('tt_content', $itemRow)
@@ -301,7 +307,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	/**
 	 * Sets the headers for a grid before content and headers are put together
 	 *
-	 * @param \tx_cms_layout    $parentObject: The parent object that triggered this hook
+	 * @param tx_cms_layout     $parentObject: The parent object that triggered this hook
 	 * @param array             $head: The collected item data rows
 	 * @param int               $colPos: The column position we want to get a header for
 	 * @param array             $row: The current data row for the container item
@@ -309,7 +315,7 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	 * @param array             $editUidList: determines if we will get edit icons or not
 	 * @return void
 	 */
-	public function setColumnHeader(&$parentObject, &$head, &$colPos, &$row, &$name, &$editUidList) {
+	public function setColumnHeader(tx_cms_layout $parentObject, &$head, &$colPos, &$row, &$name, &$editUidList) {
 		$specificUid = tx_gridelements_helper::getInstance()->getSpecificUid($row);
 
 		if ($colPos < 32768) {
@@ -334,10 +340,11 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	/**
 	 * Draw header for a content element column:
 	 *
-	 * @param	string		Column name
-	 * @param	string		Edit params (Syntax: &edit[...] for alt_doc.php)
-	 * @param	string		New element params (Syntax: &edit[...] for alt_doc.php)
-	 * @return	string		HTML table
+	 * @param string $colName Column name
+	 * @param string $editParams Edit params (Syntax: &edit[...] for alt_doc.php)
+	 * @param string $newParams New element params (Syntax: &edit[...] for alt_doc.php)
+	 * @param tx_cms_layout $parentObject
+	 * @return string HTML table
 	 */
 	function tt_content_drawColHeader($colName, $editParams, $newParams, &$parentObject) {
 
@@ -526,11 +533,11 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	/**
 	 * Renders the HTML code for a single tt_content element
 	 *
-	 * @param \tx_cms_layout    $parentObject: The parent object that triggered this hook
+	 * @param tx_cms_layout     $parentObject: The parent object that triggered this hook
 	 * @param array             $itemRow: The data row to be rendered as HTML
 	 * @return string
 	 */
-	public function renderSingleElementHTML(&$parentObject, $itemRow) {
+	public function renderSingleElementHTML(tx_cms_layout $parentObject, $itemRow) {
 		$singleElementHTML = $parentObject->tt_content_drawHeader(
 			$itemRow,
 			$parentObject->tt_contentConfig['showInfo']
