@@ -50,6 +50,9 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 				case 'gridelements_pi1':
 					$drawItem = FALSE;
 					$itemContent .= $this->renderCTypeGridelements($parentObject, $row, $showHidden, $deleteClause);
+					$refIndexObj = t3lib_div::makeInstance('t3lib_refindex');
+					/* @var $refIndexObj t3lib_refindex */
+					$refIndexObj->updateRefIndexTable('tt_content', $row['uid']);
 					break;
 				case 'shortcut':
 					$drawItem = FALSE;
