@@ -42,32 +42,45 @@ class tx_gridelements_tcemain_moveRecord extends tx_gridelements_tcemain_abstrac
 	 * @param array             $moveRec: An array of some values of the record that is going to be moved
 	 * @param int               $resolvedPid: The calculated id of the page the record should be moved to
 	 * @param boolean           $recordWasMoved: A switch to tell the parent object, if the record has been moved
-	 * @param \t3lib_TCEmain    $parentObj: The parent object that triggered this hook
+	 * @param t3lib_TCEmain     $parentObj
+	 * @return void
 	 */
 	public function moveRecord($table, $uid, &$destPid, &$propArr, &$moveRec, $resolvedPid, &$recordWasMoved, &$parentObj) {
-		$GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_columns';
-		if ($table == 'tt_content' && !$parentObj->isImporting) {
+		$this->init($table, $uid, $parentObj);
+		if ($table == 'tt_content' && !$this->getTceMain()->isImporting) {
+			$copyAfterDuplFields = $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'];
+			$GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container,tx_gridelements_columns';
 			$cmd = t3lib_div::_GET('cmd');
 			$originalElement = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 				'*',
 				'tt_content',
 				'uid=' . $uid
 			);
-			$containerUpdateArray[] = $originalElement['tx_gridelements_container'];
+			$containerUpdateArray[$originalElement['tx_gridelements_container']] = -1;
 
 			if (strpos($cmd['tt_content'][$uid]['move'], 'x') !== false) {
 				$target = t3lib_div::trimExplode('x', $cmd['tt_content'][$uid]['move']);
 				$targetUid = abs(intval($target[0]));
-				$this->createUpdateArrayForSplitElements($uid, $destPid, $targetUid, $target, $containerUpdateArray, $parentObj);
+				$updateArray = $this->createUpdateArrayForSplitElements($uid, $destPid, $targetUid, $target, $containerUpdateArray);
 			} else if($cmd['tt_content'][$uid]['move']) {
 				// to be done: handle moving with the up and down arrows via list module correctly
-
-				/* $destPid = -$uid;
-				$parentObj->updateDB('tt_content', $uid, $updateArray);
-				$this->doGridContainerUpdate($containerUpdateArray, $parentObj);*/
-			} else if(!count($cmd) && !$parentObj->moveChildren) {
-				$this->createUpdateArrayForContainerMove($uid, $containerUpdateArray, $originalElement, $parentObj);
+				$targetElement = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
+					'*',
+					'tt_content',
+					'uid=' . -$destPid
+				);
+				$containerUpdateArray[$targetElement['tx_gridelements_container']] += 1;
+				$this->getTceMain()->moveRecord_raw('tt_content', $uid, $destPid);
+				$this->getTceMain()->updateRefIndex('tt_content', $uid);
+				$recordWasMoved = true;
+			} else if(!count($cmd) && !$this->getTceMain()->moveChildren) {
+				$updateArray = $this->createUpdateArrayForContainerMove($originalElement);
 			}
+			if(count($updateArray) > 0) {
+				$this->getTceMain()->updateDB('tt_content', $uid, $updateArray);
+			}
+			$this->doGridContainerUpdate($containerUpdateArray);
+			$GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] = $copyAfterDuplFields;
 		}
 	}
 
@@ -79,12 +92,11 @@ class tx_gridelements_tcemain_moveRecord extends tx_gridelements_tcemain_abstrac
 	 * @param integer $targetUid
 	 * @param array $target
 	 * @param array $containerUpdateArray
-	 * @param t3lib_TCEmain $tceMain
 	 * @return array UpdateArray
 	 */
-	public function createUpdateArrayForSplitElements($recordUid, &$destPid, $targetUid, array $target, array $containerUpdateArray, t3lib_TCEmain &$tceMain) {
+	public function createUpdateArrayForSplitElements($recordUid, &$destPid, $targetUid, array $target, array &$containerUpdateArray) {
 		if ($targetUid != $recordUid && intval($target[0]) < 0) {
-			$containerUpdateArray[] = $targetUid;
+			$containerUpdateArray[$targetUid] += 1;
 			$column = intval($target[1]);
 			$updateArray = array(
 				'colPos' => -1,
@@ -105,24 +117,19 @@ class tx_gridelements_tcemain_moveRecord extends tx_gridelements_tcemain_abstrac
 		}
 
 		$destPid = -$recordUid;
-		$tceMain->updateDB('tt_content', $recordUid, $updateArray);
-		$this->doGridContainerUpdate($containerUpdateArray, $tceMain);
 
 		return $updateArray;
 	}
 
 	/**
-	 * create update array for splitted elements (tt_content)
+	 * create update array for split elements (tt_content)
 	 *
-	 * @param integer $recordUid
-	 * @param array $containerUpdateArray
 	 * @param array $originalElement
-	 * @param t3lib_TCEmain $tceMain
 	 * @return array UpdateArray
 	 */
-	public function createUpdateArrayForContainerMove($recordUid, array $containerUpdateArray, array $originalElement, t3lib_TCEmain &$tceMain) {
+	public function createUpdateArrayForContainerMove(array $originalElement) {
 		if($originalElement['CType'] == 'gridelements_pi1') {
-			$tceMain->moveChildren = true;
+			$this->getTceMain()->moveChildren = true;
 		}
 
 		$updateArray = array(
@@ -131,8 +138,6 @@ class tx_gridelements_tcemain_moveRecord extends tx_gridelements_tcemain_abstrac
 			'tx_gridelements_container' => 0,
 			'tx_gridelements_columns' => 0
 		);
-		$tceMain->updateDB('tt_content', $recordUid, $updateArray);
-		$this->doGridContainerUpdate($containerUpdateArray, $tceMain);
 
 		return $updateArray;
 	}

@@ -32,34 +32,6 @@
 class tx_gridelements_TCEmainHook {
 
 	/**
-	 * Add processed record to actionOnGridElement array for later after processing
-	 * of tx_gridelements_container fields
-	 *
-	 * @author Martin R. Krause, martin.r.krause@gmx.de
-	 *
-	 * @param string $status
-	 * @param string $table
-	 * @param integer $id
-	 * @param array $fieldArray
-	 * @param t3lib_TCEmain $parentObj
-	 * @return void
-	 */
-	public function processDatamap_afterDatabaseOperations($status, $table, $id, $fieldArray, t3lib_TCEmain $parentObj) {
-		if (!is_array($GLOBALS['tx_gridelements']['actionOnGridElement'])) {
-			$GLOBALS['tx_gridelements']['actionOnGridElement'] = array();
-		}
-
-		// store record for gridelements post processing after process_cmdmap
-		if ($fieldArray['CType'] == 'gridelements_pi1') {
-			$GLOBALS['tx_gridelements']['actionOnGridElement'][] = array(
-				'table' => $table,
-				'id' => $parentObj->substNEWwithIDs[$id],
-				'value' => $fieldArray['sys_language_uid']
-			);
-		}
-	}
-
-	/**
 	 * Function to set the colPos of an element depending on
 	 * whether it is a child of a parent container or not
 	 * will set colPos according to availability of the current grid column of an element

@@ -94,8 +94,8 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 		if ($pid > 0) {
 			$this->setFieldEntriesForTargets($fieldArray, $pid);
 		} else if (intval($fieldArray['tx_gridelements_container']) > 0 && strpos(key($this->getTceMain()->datamap['tt_content']), 'NEW') !== false) {
-			$containerUpdateArray[] = intval($fieldArray['tx_gridelements_container']);
-			$this->doGridContainerUpdate($containerUpdateArray, $this->getTceMain(), 1);
+			$containerUpdateArray[intval($fieldArray['tx_gridelements_container'])] = 1;
+			$this->doGridContainerUpdate($containerUpdateArray);
 		}
 		$this->setFieldEntriesForGridContainers($fieldArray);
 	}
@@ -132,7 +132,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 			$fieldArray['sorting'] = 0;
 			$fieldArray['tx_gridelements_container'] = $targetUid;
 			$fieldArray['tx_gridelements_columns'] = intval($target[1]);
-			$containerUpdateArray[] = $targetUid;
+			$containerUpdateArray[$targetUid] = 1;
 		} else {
 			$fieldArray['colPos'] = intval($target[1]);
 			$fieldArray['sorting'] = 0;
@@ -140,7 +140,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 			$fieldArray['tx_gridelements_columns'] = 0;
 		}
 
-		$this->doGridContainerUpdate($containerUpdateArray, $this->getTceMain(), 1);
+		$this->doGridContainerUpdate($containerUpdateArray);
 	}
 
 	/**
@@ -157,8 +157,8 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 		);
 		if ($targetElement['uid']) {
 			if ($targetElement['tx_gridelements_container'] > 0) {
-				$containerUpdateArray[] = $targetElement['tx_gridelements_container'];
-				$this->doGridContainerUpdate($containerUpdateArray, $this->getTceMain(), 1);
+				$containerUpdateArray[$targetElement['tx_gridelements_container']] = 1;
+				$this->doGridContainerUpdate($containerUpdateArray);
 				$fieldArray['tx_gridelements_container'] = $targetElement['tx_gridelements_container'];
 				$fieldArray['tx_gridelements_columns'] = $targetElement['tx_gridelements_columns'];
 				$fieldArray['colPos'] = -1;
@@ -184,8 +184,8 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 				'tt_content',
 				'uid=' . $this->getPageUid()
 			);
-			$containerUpdateArray[] = $originalContainer['tx_gridelements_container'];
-			$this->doGridContainerUpdate($containerUpdateArray, $this->getTceMain(), -1);
+			$containerUpdateArray[$originalContainer['tx_gridelements_container']] = -1;
+			$this->doGridContainerUpdate($containerUpdateArray);
 
 			$fieldArray['colPos'] = $this->checkForRootColumn(intval($this->getPageUid()));
 			$fieldArray['tx_gridelements_columns'] = 0;
@@ -199,34 +199,74 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	 * return void
 	 */
 	public function setUnusedElements(&$fieldArray) {
+		$changedGridElements = array();
+		$changedElements = array();
+		$changedSubPageElements = array();
+
 		if ($this->getTable() == 'tt_content') {
-
+			$changedGridElements[$this->getPageUid()] = true;
 			$availableColumns = $this->getAvailableColumns($fieldArray['tx_gridelements_backend_layout'], 'tt_content', $this->getPageUid());
+			$childElementsInUnavailableColumns = array_keys(
+				$GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+					'uid',
+					'tt_content',
+					'tx_gridelements_container = ' . $this->getPageUid() . '
+					AND tx_gridelements_columns NOT IN (' . $availableColumns . ')',
+					'',
+					'',
+					'',
+					'uid'
+				)
+			);
+			if(count($childElementsInUnavailableColumns) > 0) {
+				$GLOBALS['TYPO3_DB']->sql_query('
+					UPDATE tt_content
+					SET colPos = -2, backupColPos = -1
+					WHERE uid IN (' . join(',', $childElementsInUnavailableColumns) . ')
+				');
+				array_flip($childElementsInUnavailableColumns);
+			} else {
+				$childElementsInUnavailableColumns = array();
+			}
 
-			$GLOBALS['TYPO3_DB']->sql_query('
-				UPDATE tt_content
-				SET colPos = -2, backupColPos = -1
-				WHERE tx_gridelements_container = ' . $this->getPageUid() . '
-				AND tx_gridelements_columns NOT IN (' . $availableColumns . ')
-			');
-			$GLOBALS['TYPO3_DB']->sql_query('
-				UPDATE tt_content
-				SET colPos = -1, backupColPos = -2
-				WHERE tx_gridelements_container = ' . $this->getPageUid() . '
-				AND tx_gridelements_columns IN (' . $availableColumns . ')
-			');
+			$childElementsInAvailableColumns = array_keys(
+				$GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+					'uid',
+					'tt_content',
+					'tx_gridelements_container = ' . $this->getPageUid() . '
+					AND tx_gridelements_columns IN (' . $availableColumns . ')',
+					'',
+					'',
+					'',
+					'uid'
+				)
+			);
+			if(count($childElementsInAvailableColumns) > 0) {
+				$GLOBALS['TYPO3_DB']->sql_query('
+					UPDATE tt_content
+					SET colPos = -1, backupColPos = -2
+					WHERE uid IN (' . join(',', $childElementsInAvailableColumns) . ')
+				');
+				array_flip($childElementsInAvailableColumns);
+			} else {
+				$childElementsInAvailableColumns = array();
+			}
+
+			$changedGridElements = array_merge(
+				$changedGridElements,
+				$childElementsInUnavailableColumns,
+				$childElementsInAvailableColumns
+			);
 		}
 
 		if ($this->getTable() == 'pages') {
 			$rootline = $this->beFunc->BEgetRootLine($this->getPageUid());
-
 			for ($i = count($rootline); $i > 0; $i--) {
 				$page = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 					'uid, backend_layout, backend_layout_next_level',
 					'pages',
 					'uid=' . intval($rootline[$i]['uid'])
 				);
-				$selectedBackendLayout = intval($page['backend_layout']);
 				$selectedBackendLayoutNextLevel = intval($page['backend_layout_next_level']);
 				if ($page['uid'] == $this->getPageUid()) {
 					if ($fieldArray['backend_layout_next_level'] != 0) {
@@ -250,47 +290,136 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 
 			if (isset($fieldArray['backend_layout'])) {
 				$availableColumns = $this->getAvailableColumns($backendLayoutUid, 'pages', $this->getPageUid());
+				$elementsInUnavailableColumns = array_keys(
+					$GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+						'uid',
+						'tt_content',
+						'pid = ' . $this->getPageUid() . '
+						AND colPos NOT IN (' . $availableColumns . ')',
+						'',
+						'',
+						'',
+						'uid'
+					)
+				);
+				if(count($elementsInUnavailableColumns) > 0) {
+					$GLOBALS['TYPO3_DB']->sql_query('
+						UPDATE tt_content
+						SET backupColPos = colPos, colPos = -2
+						WHERE uid IN (' . join(',', $elementsInUnavailableColumns) . ')
+					');
+					array_flip($elementsInUnavailableColumns);
+				} else {
+					$elementsInUnavailableColumns = array();
+				}
 
-				$GLOBALS['TYPO3_DB']->sql_query('
-					UPDATE tt_content
-					SET backupColPos = colPos, colPos = -2
-					WHERE pid = ' . $this->getPageUid() . '
-					AND colPos NOT IN (' . $availableColumns . ')
-				');
-				$GLOBALS['TYPO3_DB']->sql_query('
-					UPDATE tt_content
-					SET colPos = backupColPos, backupColPos = -2
-					WHERE pid = ' . $this->getPageUid() . '
-					AND backupColPos != -2
-					AND backupColPos IN (' . $availableColumns . ')
-				');
+				$elementsInAvailableColumns = array_keys(
+					$GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+						'uid',
+						'tt_content',
+						'pid = ' . $this->getPageUid() . '
+						AND pid = ' . $this->getPageUid() . '
+						AND backupColPos != -2
+						AND backupColPos IN (' . $availableColumns . ')',
+						'',
+						'',
+						'',
+						'uid'
+					)
+				);
+				if(count($childElementsInAvailableColumns) > 0) {
+					$GLOBALS['TYPO3_DB']->sql_query('
+						UPDATE tt_content
+						SET colPos = backupColPos, backupColPos = -2
+						WHERE uid IN (' . join(',', $elementsInAvailableColumns) . ')
+					');
+					array_flip($elementsInAvailableColumns);
+				} else {
+					$elementsInAvailableColumns = array();
+				}
+
+				$changedElements = array_merge(
+					$elementsInUnavailableColumns,
+					$elementsInAvailableColumns
+				);
 			}
 
 			if (isset($fieldArray['backend_layout_next_level'])) {
 				$backendLayoutUid = $backendLayoutNextLevelUid ? $backendLayoutNextLevelUid : $backendLayoutUid;
-
 				$subpages = array();
 				$this->getSubpagesRecursively($this->getPageUid(), $subpages);
-
 				if (count($subpages)) {
+					$changedSubPageElements = array();
 					foreach ($subpages as $page) {
 						$availableColumns = $this->getAvailableColumns($backendLayoutUid, 'pages', $page['uid']);
+						$subPageElementsInUnavailableColumns = array_keys(
+							$GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+								'uid',
+								'tt_content',
+								'pid = ' . $page['uid'] . '
+								AND colPos NOT IN (' . $availableColumns . ')',
+								'',
+								'',
+								'',
+								'uid'
+							)
+						);
+						if(count($subPageElementsInUnavailableColumns) > 0) {
+							$GLOBALS['TYPO3_DB']->sql_query('
+								UPDATE tt_content
+								SET backupColPos = colPos, colPos = -2
+								WHERE uid IN (' . join(',', $subPageElementsInUnavailableColumns) . ')
+							');
+							array_flip($subPageElementsInUnavailableColumns);
+						} else {
+							$subPageElementsInUnavailableColumns = array();
+						}
 
-						$GLOBALS['TYPO3_DB']->sql_query('
-							UPDATE tt_content
-							SET backupColPos = colPos, colPos = -2
-							WHERE pid = ' . $page['uid'] . '
-							AND colPos NOT IN (' . $availableColumns . ')
-						');
-						$GLOBALS['TYPO3_DB']->sql_query('
-							UPDATE tt_content
-							SET colPos = backupColPos, backupColPos = -2
-							WHERE pid = ' . $page['uid'] . '
-							AND backupColPos != -2
-							AND backupColPos IN (' . $availableColumns . ')
-						');
+						$subPageElementsInAvailableColumns = array_keys(
+							$GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+								'uid',
+								'tt_content',
+								'pid = ' . $page['uid'] . '
+								AND backupColPos != -2
+								AND backupColPos IN (' . $availableColumns . ')',
+								'',
+								'',
+								'',
+								'uid'
+							)
+						);
+						if(count($subPageElementsInAvailableColumns) > 0) {
+							$GLOBALS['TYPO3_DB']->sql_query('
+								UPDATE tt_content
+								SET colPos = backupColPos, backupColPos = -2
+								WHERE uid IN (' . join(',', $subPageElementsInAvailableColumns) . ')
+							');
+							array_flip($subPageElementsInAvailableColumns);
+						} else {
+							$subPageElementsInAvailableColumns = array();
+						}
+
+						$changedPageElements = array_merge(
+							$subPageElementsInUnavailableColumns,
+							$subPageElementsInAvailableColumns
+						);
+						$changedSubPageElements = array_merge(
+							$changedSubPageElements,
+							$changedPageElements
+						);
 					}
 				}
+			}
+		}
+
+		$changedElementUids = array_merge(
+			$changedGridElements,
+			$changedElements,
+			$changedSubPageElements
+		);
+		if(count($changedElementUids) > 0) {
+			foreach($changedElementUids as $uid => $value) {
+				$this->tceMain->updateRefIndex('tt_content', $uid);
 			}
 		}
 	}

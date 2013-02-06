@@ -45,6 +45,7 @@ class tx_gridelements_tcemain_processCmdmap extends tx_gridelements_tcemain_abst
 	 *
 	 */
 	public function processCmdmap($command, $table, $id, $value, &$commandIsProcessed, t3lib_TCEmain $parentObj) {
+		$this->init($table, $id, $parentObj);
 		// @todo Either create a new command map type, e.g. "reference" and process it with a hook instead of using $_GET //olly
 		$DDcopy = intval(t3lib_div::_GET('DDcopy'));
 		$reference = intval(t3lib_div::_GET('reference'));
@@ -53,7 +54,7 @@ class tx_gridelements_tcemain_processCmdmap extends tx_gridelements_tcemain_abst
 		if ($command == 'copy' &&
 			!$commandIsProcessed &&
 			$table == 'tt_content' &&
-			!$parentObj->isImporting
+			!$this->getTceMain()->isImporting
 		) {
 
 			$copyAfterDuplFields = $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'];
@@ -85,21 +86,19 @@ class tx_gridelements_tcemain_processCmdmap extends tx_gridelements_tcemain_abst
 						$overrideArray['tx_gridelements_columns'] = 0;
 						$overrideArray['colPos'] = intval($valueArray[1]);
 					} else if ($valueArray[1] != '') {
-						$containerUpdateArray[] = abs($valueArray[0]);
+						$containerUpdateArray[abs($valueArray[0])] = 1;
 						$overrideArray['colPos'] = -1;
 						$overrideArray['tx_gridelements_container'] = abs($valueArray[0]);
 						$overrideArray['tx_gridelements_columns'] = intval($valueArray[1]);
 					}
-					$parentObj->copyRecord($table, $id, intval($valueArray[0]), 1, $overrideArray);
-					if(count($containerUpdateArray) > 0) {
-						$this->doGridContainerUpdate($containerUpdateArray, $parentObj);
-					}
+					$this->getTceMain()->copyRecord($table, $id, intval($valueArray[0]), 1, $overrideArray);
+					$this->doGridContainerUpdate($containerUpdateArray);
 
 				} else {
-					$parentObj->copyRecord($table, $id, $value, 1, $overrideArray);
+					$this->getTceMain()->copyRecord($table, $id, $value, 1, $overrideArray);
 				}
 			} else {
-				$parentObj->copyRecord($table, $id, $value, 1);
+				$this->getTceMain()->copyRecord($table, $id, $value, 1);
 			}
 
 			$commandIsProcessed = true;

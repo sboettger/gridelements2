@@ -88,9 +88,9 @@ class tx_gridelements_tcemain_abstract {
 	/**
 	 * initializes this class
 	 *
-	 * @param	string $table: The name of the table the data should be saved to
-	 * @param	integer $pageUid: The uid of the page we are currently working on
-	 * @param	\t3lib_TCEmain $parentObj: The parent object that triggered this hook
+	 * @param   string $table: The name of the table the data should be saved to
+	 * @param   integer $pageUid: The uid of the page we are currently working on
+	 * @param   t3lib_TCEmain $tceMain
 	 * @return void
 	 */
 	public function init($table, $pageUid, t3lib_TCEmain $tceMain) {
@@ -170,18 +170,20 @@ class tx_gridelements_tcemain_abstract {
 	/**
 	 * Function to handle record actions between different grid containers
 	 *
-	 * @param integer $uid: The uid of the grid container that needs an update
-	 * @param \t3lib_TCEmain $parentObj: The parent object that triggered this hook
+	 * @param array $containerUpdateArray
 	 * @param integer $newElement: Set this to 1 for updates of newly inserted elements or -1 when elements are removed from a container
+	 * @internal param int $uid : The uid of the grid container that needs an update
 	 * @return void
 	 */
-	public function doGridContainerUpdate($containerUpdateArray = array(), &$parentObj, $newElement = 0) {
-		foreach ($containerUpdateArray as $containerUid) {
-			$container = $this->layoutSetup->cacheCurrentParent($containerUid, TRUE);
-			$fieldArray = array(
-				'tx_gridelements_children' => 'tx_gridelements_children + ' . $newElement
-			);
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tt_content', 'uid=' . $container['uid'], $fieldArray, 'tx_gridelements_children');
+	public function doGridContainerUpdate($containerUpdateArray = array()) {
+		if(count($containerUpdateArray > 0)) {
+			foreach ($containerUpdateArray as $containerUid => $newElement) {
+				$fieldArray = array(
+					'tx_gridelements_children' => 'tx_gridelements_children + ' . $newElement
+				);
+				$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tt_content', 'uid=' . $containerUid, $fieldArray, 'tx_gridelements_children');
+				$this->getTceMain()->updateRefIndex('tt_content', $containerUid);
+			}
 		}
 	}
 }

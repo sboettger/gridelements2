@@ -78,9 +78,7 @@ class tx_gridelements_tcemain_abstractTest extends Tx_Extbase_Tests_Unit_BaseTes
 		$GLOBALS['TYPO3_DB'] = $t3lib_db;
 
 		$containerUpdateArray = array();
-		$parentObj = t3lib_div::makeInstance('t3lib_TCEmain');
-		$newElement = 0;
-		$hook->doGridContainerUpdate($containerUpdateArray, $parentObj, $newElement);
+		$hook->doGridContainerUpdate($containerUpdateArray);
 
 		$hook = t3lib_div::makeInstance('tx_gridelements_tcemain_abstract');
 		$t3lib_db = $this->getMock('t3lib_db', array('exec_UPDATEquery'));
@@ -91,9 +89,7 @@ class tx_gridelements_tcemain_abstractTest extends Tx_Extbase_Tests_Unit_BaseTes
 		$GLOBALS['TYPO3_DB'] = $t3lib_db;
 
 		$containerUpdateArray = array(1, 2, 3, 4);
-		$parentObj = t3lib_div::makeInstance('t3lib_TCEmain');
-		$newElement = 1;
-		$hook->doGridContainerUpdate($containerUpdateArray, $parentObj, $newElement);
+		$hook->doGridContainerUpdate($containerUpdateArray);
 	}
 }
 ?>

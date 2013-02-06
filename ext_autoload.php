@@ -15,7 +15,6 @@ return array(
 	'tx_gridelements_tcemain_abstract'					=> $extensionPath . 'lib/tcemain/class.tx_gridelements_tcemain_abstract.php',
 	'tx_gridelements_tcemain_preprocessfieldarray'		=> $extensionPath . 'lib/tcemain/class.tx_gridelements_tcemain_preProcessFieldArray.php',
 	'tx_gridelements_tcemain_processcmdmap'				=> $extensionPath . 'lib/tcemain/class.tx_gridelements_tcemain_processCmdmap.php',
-	'tx_gridelements_tcemain_processcmdmapafterfinish'	=> $extensionPath . 'lib/tcemain/class.tx_gridelements_tcemain_processCmdmapAfterFinish.php',
 	'tx_gridelements_tcemain_moverecord'				=> $extensionPath . 'lib/tcemain/class.tx_gridelements_tcemain_moveRecord.php',
 	'tx_gridelements_tt_content'						=> $extensionPath . 'lib/class.tx_gridelements_tt_content.php',
 	'tx_gridelements_wizarditemshook'					=> $extensionPath . 'lib/class.tx_gridelements_wizarditemshook.php',
