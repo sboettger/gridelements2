@@ -57,10 +57,9 @@ class tx_gridelements_tcemain_processCmdmap extends tx_gridelements_tcemain_abst
 			!$this->getTceMain()->isImporting
 		) {
 
-			$copyAfterDuplFields = $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'];
+			$copyAfterDuplicationFields = $GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'];
 			$GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] .= ',tx_gridelements_container,tx_gridelements_columns';
 
-			$overrideArray = array();
 			if($DDcopy == 1 || $reference == 1) {
 
 				$overrideArray = array();
@@ -93,9 +92,15 @@ class tx_gridelements_tcemain_processCmdmap extends tx_gridelements_tcemain_abst
 					}
 					$this->getTceMain()->copyRecord($table, $id, intval($valueArray[0]), 1, $overrideArray);
 					$this->doGridContainerUpdate($containerUpdateArray);
-
 				} else {
 					$this->getTceMain()->copyRecord($table, $id, $value, 1, $overrideArray);
+					if(intval($value) < 0) {
+						$targetRecord = t3lib_BEfunc::getRecordWSOL('tt_content', -$value, 'tx_gridelements_container');
+						if($targetRecord['tx_gridelements_container'] > 0) {
+							$containerUpdateArray[$targetRecord['tx_gridelements_container']] = 1;
+							$this->doGridContainerUpdate($containerUpdateArray);
+						}
+					}
 				}
 			} else {
 				$this->getTceMain()->copyRecord($table, $id, $value, 1);
@@ -103,7 +108,7 @@ class tx_gridelements_tcemain_processCmdmap extends tx_gridelements_tcemain_abst
 
 			$commandIsProcessed = true;
 
-			$GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] = $copyAfterDuplFields;
+			$GLOBALS['TCA']['tt_content']['ctrl']['copyAfterDuplFields'] = $copyAfterDuplicationFields;
 		}
 	}
 }
