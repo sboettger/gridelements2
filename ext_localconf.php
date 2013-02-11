@@ -10,7 +10,7 @@ t3lib_extMgm::addPageTSConfig('
 	mod.wizards.newContentElement.renderMode = tabs
 ');
 
-t3lib_extMgm::addPItoST43($_EXTKEY, 'pi1/class.tx_gridelements_pi1.php', '_pi1', 'CType', 1);
+t3lib_extMgm::addPItoST43($_EXTKEY, 'view/class.tx_gridelements_view.php', '_pi1', 'CType', 1);
 
 // register BE AJAX controller
 $TYPO3_CONF_VARS['BE']['AJAX']['tx_gridelements::controller'] =

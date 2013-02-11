@@ -19,7 +19,7 @@ return array(
 	'tx_gridelements_tt_content'						=> $extensionPath . 'lib/class.tx_gridelements_tt_content.php',
 	'tx_gridelements_wizarditemshook'					=> $extensionPath . 'lib/class.tx_gridelements_wizarditemshook.php',
 	'tx_gridelements_helper'							=> $extensionPath . 'lib/class.tx_gridelements_helper.php',
-	'tx_gridelements_pi1'								=> $extensionPath . 'pi1/class.tx_gridelements_pi1.php',
+	'tx_gridelements_view'								=> $extensionPath . 'view/class.tx_gridelements_view.php',
 	'wrapperfort3libbefunc'								=> $extensionPath . 'Tests/wrapperForT3libBeFunc.php',
 
 	// hooks

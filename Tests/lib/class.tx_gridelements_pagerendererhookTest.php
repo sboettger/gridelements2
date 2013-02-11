@@ -36,12 +36,12 @@ class tx_gridelements_pagerendererhookTest extends Tx_Extbase_Tests_Unit_BaseTes
 	public function setUp() {
 		$GLOBALS['TSFE'] = t3lib_div::makeInstance('tslib_fe', $TYPO3_CONF_VARS, 0);
 		$GLOBALS['TSFE']->sys_page = t3lib_div::makeInstance('t3lib_pageSelect');
-		$this->pi1 = t3lib_div::makeInstance('tx_gridelements_pi1');
-		$this->pi1->cObj = t3lib_div::makeInstance('tslib_cObj');
+		$this->view = t3lib_div::makeInstance('tx_gridelements_view');
+		$this->view->cObj = t3lib_div::makeInstance('tslib_cObj');
 	}
 
 	public function tearDown() {
-		unset($this->pi1);
+		unset($this->view);
 	}
 
 
@@ -54,19 +54,19 @@ class tx_gridelements_pagerendererhookTest extends Tx_Extbase_Tests_Unit_BaseTes
 	 * @test
 	 */
 	public function testGetSysLanguageContent() {
-		$result = $this->pi1->getSysLanguageContent();
+		$result = $this->view->getSysLanguageContent();
 		$this->assertEquals(0, $result);
 
 		$GLOBALS['TSFE']->sys_language_content = 'test';
-		$result = $this->pi1->getSysLanguageContent();
+		$result = $this->view->getSysLanguageContent();
 		$this->assertEquals(0, $result);
 
 		$GLOBALS['TSFE']->sys_language_content = '12';
-		$result = $this->pi1->getSysLanguageContent();
+		$result = $this->view->getSysLanguageContent();
 		$this->assertEquals(12, $result);
 
 		$GLOBALS['TSFE']->sys_language_contentOL = '25';
-		$result = $this->pi1->getSysLanguageContent();
+		$result = $this->view->getSysLanguageContent();
 		$this->assertEquals('0,-1', $result);
 
 		unset($GLOBALS['TSFE']);
@@ -78,7 +78,7 @@ class tx_gridelements_pagerendererhookTest extends Tx_Extbase_Tests_Unit_BaseTes
 	 * @test
 	 */
 	public function testGetChildrenWithEmptyValues() {
-		$result = $this->pi1->getChildren();
+		$result = $this->view->getChildren();
 		$this->assertEquals(array(), $result);
 		// add additional test here with DB
 	}

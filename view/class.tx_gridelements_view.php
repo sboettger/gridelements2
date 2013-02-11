@@ -27,9 +27,6 @@
  * Hint: use extdeveval to insert/update function index above.
  */
 
-require_once(PATH_tslib . 'class.tslib_pibase.php');
-
-
 /**
  * Plugin 'Grid Element' for the 'gridelements' extension.
  *
@@ -37,12 +34,11 @@ require_once(PATH_tslib . 'class.tslib_pibase.php');
  * @package	TYPO3
  * @subpackage	tx_gridelements
  */
-class tx_gridelements_pi1 extends tslib_pibase {
+class tx_gridelements_view extends tslib_cObj {
 
-	public $prefixId = 'tx_gridelements_pi1'; // Same as class name
-	public $scriptRelPath = 'pi1/class.tx_gridelements_pi1.php'; // Path to this script relative to the extension dir.
+	public $prefixId = 'tx_gridelements_view'; // Same as class name
+	public $scriptRelPath = 'view/class.tx_gridelements_view.php'; // Path to this script relative to the extension dir.
 	public $extKey = 'gridelements'; // The extension key.
-	public $pi_checkCHash = true;
 
 	/**
 	 * The main method of the PlugIn
@@ -56,7 +52,7 @@ class tx_gridelements_pi1 extends tslib_pibase {
 		// first we have to take care of possible flexform values containing additional information
 		// that is not available via DB relations. It will be added as "virtual" key to the existing data Array
 		// so that you can easily get the values with TypoScript
-		$this->pi_initPIflexForm();
+		$this->initPiFlexForm();
 		$this->getPiFlexFormData();
 
 		// now we have to find the children of this grid container regardless of their column
@@ -245,7 +241,7 @@ class tx_gridelements_pi1 extends tslib_pibase {
 			foreach ($piFlexForm['data'] as $sheet => $data) {
 				foreach ($data as $lang => $value) {
 					foreach ($value as $key => $val) {
-						$this->cObj->data['flexform_' . $key] = $this->pi_getFFvalue($piFlexForm, $key, $sheet);
+						$this->cObj->data['flexform_' . $key] = $this->getFFvalue($piFlexForm, $key, $sheet);
 					}
 				}
 			}
@@ -488,9 +484,73 @@ class tx_gridelements_pi1 extends tslib_pibase {
 			','
 		);*/
 	}
+
+	/**
+	 * Converts $this->cObj->data['pi_flexform'] from XML string to flexForm array.
+	 *
+	 * @param	string		Field name to convert
+	 * @return	void
+	 */
+	function initPIflexForm($field='pi_flexform')	{
+		// Converting flexform data into array:
+		if (!is_array($this->cObj->data[$field]) && $this->cObj->data[$field])	{
+			$this->cObj->data[$field] = t3lib_div::xml2array($this->cObj->data[$field]);
+			if (!is_array($this->cObj->data[$field]))	$this->cObj->data[$field]=array();
+		}
+	}
+
+	/**
+	 * Return value from somewhere inside a FlexForm structure
+	 *
+	 * @param	array		FlexForm data
+	 * @param	string		Field name to extract. Can be given like "test/el/2/test/el/field_templateObject" where each part will dig a level deeper in the FlexForm data.
+	 * @param	string		Sheet pointer, eg. "sDEF"
+	 * @param	string		Language pointer, eg. "lDEF"
+	 * @param	string		Value pointer, eg. "vDEF"
+	 * @return	string		The content.
+	 */
+	function getFFvalue($T3FlexForm_array,$fieldName,$sheet='sDEF',$lang='lDEF',$value='vDEF')	{
+		$sheetArray = is_array($T3FlexForm_array) ? $T3FlexForm_array['data'][$sheet][$lang] : '';
+		if (is_array($sheetArray))	{
+			return $this->getFFvalueFromSheetArray($sheetArray,explode('/',$fieldName),$value);
+		}
+	}
+
+	/**
+	 * Returns part of $sheetArray pointed to by the keys in $fieldNameArray
+	 *
+	 * @param	array		Multidimensiona array, typically FlexForm contents
+	 * @param	array		Array where each value points to a key in the FlexForms content - the input array will have the value returned pointed to by these keys. All integer keys will not take their integer counterparts, but rather traverse the current position in the array an return element number X (whether this is right behavior is not settled yet...)
+	 * @param	string		Value for outermost key, typ. "vDEF" depending on language.
+	 * @return	mixed		The value, typ. string.
+	 * @access private
+	 * @see pi_getFFvalue()
+	 */
+	function getFFvalueFromSheetArray($sheetArray,$fieldNameArr,$value)	{
+
+		$tempArr=$sheetArray;
+		foreach($fieldNameArr as $k => $v)	{
+			if (t3lib_utility_Math::canBeInterpretedAsInteger($v))	{
+				if (is_array($tempArr))	{
+					$c=0;
+					foreach($tempArr as $values)	{
+						if ($c==$v)	{
+							#debug($values);
+							$tempArr=$values;
+							break;
+						}
+						$c++;
+					}
+				}
+			} else {
+				$tempArr = $tempArr[$v];
+			}
+		}
+		return $tempArr[$value];
+	}
 }
 
-if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/pi1/class.tx_gridelements_pi1.php'])) {
-	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/pi1/class.tx_gridelements_pi1.php']);
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/view/class.tx_gridelements_view.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/view/class.tx_gridelements_view.php']);
 }
 ?>

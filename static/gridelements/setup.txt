@@ -15,7 +15,7 @@ lib.tt_content.shortcut.pages = COA
 lib.tt_content.shortcut.pages {
 	10 = USER
 	10 {
-		userFunc = tx_gridelements_pi1->user_getTreeList
+		userFunc = tx_gridelements_view->user_getTreeList
     }
 	20 = CONTENT
 	20 {
@@ -53,7 +53,7 @@ tt_content.gridelements_pi1 {
 	20 {
 		10 = USER
 		10 {
-			userFunc = tx_gridelements_pi1->main
+			userFunc = tx_gridelements_view->main
 			setup {
 				default < lib.gridelements.defaultGridSetup
 			}
