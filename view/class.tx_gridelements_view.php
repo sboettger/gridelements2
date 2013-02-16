@@ -67,78 +67,41 @@ class tx_gridelements_view extends tslib_cObj {
 
 		$availableColumns = $layoutSetup->getLayoutColumns($layout);
 		$csvColumns = str_replace('-2,-1,', '', $availableColumns['CSV']);
-		$children = $this->getChildren($element, $csvColumns);
+		$this->getChildren($element, $csvColumns);
 
 		// and we have to determine the frontend setup related to the backend layout record which is assigned to this container
 		$typoScriptSetup = $layoutSetup->getTypoScriptSetup($layout);
 
 		// if there are any children available, we can start with the render process
-		if (count($children)) {
+		if (count($this->cObj->data['tx_gridelements_view_children'])) {
 			// we need a sorting columns array to make sure that the columns are rendered in the order
 			// that they have been created in the grid wizard but still be able to get all children
 			// within just one SELECT query
 			$sortColumns = t3lib_div::trimExplode(',', $csvColumns);
 
-			$columns = $this->renderChildrenIntoParentColumns($children, $typoScriptSetup, $sortColumns, $availableColumns);
+			$this->renderChildrenIntoParentColumns($typoScriptSetup, $sortColumns, $availableColumns);
+			unset($children);
+			unset($sortColumns);
 
 			// if there are any columns available, we can go on with the render process
-			if (count($columns)) {
-				$content = $this->renderColumnsIntoParentGrid($columns, $typoScriptSetup);
+			if (count($this->cObj->data['tx_gridelements_view_columns'])) {
+				$content = $this->renderColumnsIntoParentGrid($typoScriptSetup);
 			}
 		}
+
+		unset($availableColumns);
+		unset($csvColumns);
 
 		// finally we can unset the columns setup as well and apply stdWrap operations to the overall result
 		// before returning the content
 		unset($typoScriptSetup['columns.']);
+
 		$content = count($typoScriptSetup)
 			? $this->cObj->stdWrap($content, $typoScriptSetup)
 			: $content;
 
 		return $content;
 
-	}
-
-	/**
-	 * fetches all available columns for a certain grid container
-	 *
-	 * @param   int     $layout: The selected backend layout of the grid container
-	 * @return  CSV     $availableColumns: The columns available for the selected layout as CSV list
-	 * @deprecated Use $this->layoutSetup->getLayoutColumns($layoutId) instead
-	 *
-	 */
-	public function getAvailableColumns($layout = 0) {
-
-		t3lib_div::logDeprecatedFunction();
-
-		$availableColumns = array();
-
-		if ($layout) {
-			$backendLayout = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
-				'*',
-				'tx_gridelements_backend_layout',
-				'uid=' . $layout
-			);
-			if (isset($backendLayout['config']) && $backendLayout['config']) {
-				/** @var t3lib_TSparser $parser  */
-				$parser = t3lib_div::makeInstance('t3lib_TSparser');
-				$parser->parse($backendLayout['config']);
-
-				$backendLayout['__config'] = $parser->setup;
-
-				// create colPosList
-				if ($backendLayout['__config']['backend_layout.'] && $backendLayout['__config']['backend_layout.']['rows.']) {
-					foreach ($backendLayout['__config']['backend_layout.']['rows.'] as $row) {
-						if (isset($row['columns.']) && is_array($row['columns.'])) {
-							foreach ($row['columns.'] as $column) {
-								$availableColumns[] = $column['colPos'];
-							}
-						}
-					}
-				}
-			}
-		}
-
-		return implode(',', $availableColumns);
 	}
 
 	/**
@@ -179,15 +142,13 @@ class tx_gridelements_view extends tslib_cObj {
 					}
 
 					if (is_array($child)) {
-						$children[] = $child;
+						$this->cObj->data['tx_gridelements_view_children'][] = $child;
 						unset($child);
 					}
 				}
 				$GLOBALS['TYPO3_DB']->sql_free_result($res);
 			}
 		}
-
-		return $children;
 	}
 
 	/**
@@ -203,30 +164,6 @@ class tx_gridelements_view extends tslib_cObj {
 		} else {
 			return intval($GLOBALS['TSFE']->sys_language_content);
 		}
-	}
-
-	/**
-	 * Language overlay for each of the children
-	 *
-	 * @param   array   $row: The record data to be translated
-	 * @param   string  $table: The table the record has been coming from
-	 * @return  array   $row: The translated record data
-	 * @deprecated
-	 */
-	public function languageOverlay($row, $table = 'tt_content') {
-
-		t3lib_div::logDeprecatedFunction();
-
-		if (is_array($row) && $GLOBALS['TSFE']->sys_language_contentOL) {
-			$row = $GLOBALS['TSFE']->sys_page->getRecordOverlay(
-				$table,
-				$row,
-				$GLOBALS['TSFE']->sys_language_content,
-				$GLOBALS['TSFE']->sys_language_contentOL
-			);
-		}
-
-		return $row;
 	}
 
 	/**
@@ -246,76 +183,46 @@ class tx_gridelements_view extends tslib_cObj {
 				}
 			}
 		}
-	}
 
-	/**
-	 * fetches the setup for each of the columns
-	 * assigns a default setup if there is none available
-	 *
-	 * @param   int     $layout: The selected backend layout of the grid container
-	 * @param   array   $conf: The TypoScript setup of the grid container
-	 * @return  array   $setup: The adjusted TypoScript setup for the container or a default setup
-	 * @deprecated Use $this->layoutSetup->getTypoScriptSetup($layoutId) instead
-	 *
-	 */
-	public function getSetup($layout = 0, $conf = array()) {
-		t3lib_div::logDeprecatedFunction();
-
-		$setup = array();
-
-		if ($layout == '0' && isset($conf['setup.']['default.'])) {
-			$setup = $conf['setup.']['default.'];
-		} else if ($layout && isset($conf['setup.'][$layout . '.'])) {
-			$setup = $conf['setup.'][$layout . '.'];
-		} else if ($layout) {
-			$setup = $conf['setup.']['default.'];
-		}
-
-		// if there is none, we will use a reference to the tt_content setup as a default renderObj
-		// without additional stdWrap functionality
-		if (!count($setup)) {
-			$setup['columns.']['default.']['renderObj'] = '<tt_content';
-		}
-
-		return $setup;
+		unset($piFlexForm);
 	}
 
 	/**
 	 * renders the children of the grid container and
 	 * puts them into their respective columns
 	 *
-	 * @param   array   $children: The children available for the grid container
 	 * @param array $typoScriptSetup
 	 * @param   array   $sortColumns: An Array of column positions within the grid container in the order they got in the grid setup
-	 * @param array $availableColumns : A CSV list of available columns together with the allowed elements for each of them
-	 * @return  array   $columns: The columns of the grid container containing the HTML output of their children
 	 */
-	public function renderChildrenIntoParentColumns($children = array(), $typoScriptSetup = array(), $sortColumns = array(), $availableColumns = array()) {
-		$columns = $this->getUsedColumns($sortColumns);
+	public function renderChildrenIntoParentColumns($typoScriptSetup = array(), $sortColumns = array()) {
 
 		// first we have to make a backup copy of the original data array
 		// and we have to modify the depth counter to avoid stopping too early
 
 		$currentParentGrid = $this->copyCurrentParentGrid();
+		$columns = $this->getUsedColumns($sortColumns);
 		$parentGridData = $this->getParentGridData($currentParentGrid['data']);
 
-		$counter = count($children);
+		$counter = count($this->cObj->data['tx_gridelements_view_children']);
 		$parentRecordNumbers = array();
 		$GLOBALS['TSFE']->cObjectDepthCounter += $counter;
 
 		// each of the children will now be rendered separately and the output will be added to it's particular column
-		foreach ($children as $child) {
-			$this->renderChildIntoParentColumn($child, $parentGridData, $columns, $parentRecordNumbers, $typoScriptSetup, $availableColumns);
+		foreach ($this->cObj->data['tx_gridelements_view_children'] as $child) {
+			$this->renderChildIntoParentColumn($columns, $child, $parentGridData, $parentRecordNumbers, $typoScriptSetup);
 		}
 
 		// now we can reset the depth counter and the data array so that the element will behave just as usual
+		// it will just contain the additional tx_gridelements_view section with the prerendered elements
 		// it is important to do this before any stdWrap functions are applied to the grid container
 		// since they will depend on the original data
 		$GLOBALS['TSFE']->cObjectDepthCounter -= $counter;
 
-    $this->resetCurrentParentGrid($currentParentGrid);
+		$this->resetCurrentParentGrid($currentParentGrid);
+		$this->cObj->data['tx_gridelements_view_columns'] = $parentGridData['tx_gridelements_view_columns'];
+		unset($parentGridData);
+		unset($currentParentGrid);
 
-		return $columns;
 	}
 
 	/**
@@ -330,9 +237,11 @@ class tx_gridelements_view extends tslib_cObj {
 		// we need the array values as keys
 		if(count($sortColumns) > 0) {
 			foreach($sortColumns as $column_number) {
-				$columns[$column_number . '.'] = '';
+				$columns[$column_number] = '';
 			}
 		}
+
+		unset($sortColumns);
 
 		return $columns;
 	}
@@ -360,8 +269,10 @@ class tx_gridelements_view extends tslib_cObj {
 
 		$this->cObj->currentRecord = $data['record'];
 		$this->cObj->data = $data['data'];
+
 		$this->cObj->parentRecordNumber = $data['parentRecordNumber'];
 
+		unset($data);
 	}
 
 	/**
@@ -375,10 +286,12 @@ class tx_gridelements_view extends tslib_cObj {
 		$parentGridData = array();
 
 		foreach($data as $key => $value) {
-			if(substr($key, 0, 11) != 'parentgrid_') {
+			if(substr($key, 0, 11) != 'parentgrid_' && substr($key, 0, 21) != 'tx_gridelements_view_') {
 				$parentGridData['parentgrid_'.$key] = $value;
 			}
 		}
+
+		unset($data);
 
 		return $parentGridData;
 	}
@@ -389,13 +302,11 @@ class tx_gridelements_view extends tslib_cObj {
 	 *
 	 * @param array $child
 	 * @param array $parentGridData
-	 * @param array $columns
 	 * @param array $parentRecordNumbers
 	 * @param array $typoScriptSetup
-	 * @param array $availableColumns
 	 * @return  void
 	 */
-	public function renderChildIntoParentColumn($child, $parentGridData = array(), &$columns, &$parentRecordNumbers, $typoScriptSetup = array(), $availableColumns = array()) {
+	public function renderChildIntoParentColumn($columns, $child, &$parentGridData, &$parentRecordNumbers, $typoScriptSetup = array()) {
 
 		$column_number = intval($child['tx_gridelements_columns']);
 		$columnKey = $column_number . '.';
@@ -408,48 +319,54 @@ class tx_gridelements_view extends tslib_cObj {
 
 		if($child['uid'] > 0) {
 
-		$this->cObj->start(array_merge($child, $parentGridData), 'tt_content');
+			$this->cObj->start(array_merge($child, $parentGridData), 'tt_content');
 
-			//			if(
-			//				t3lib_div::inList($availableColumns[$columnKey], $this->cObj->data['CType']) ||
-			//				$availableColumns[$columnKey] == '*'
-			//			) {
 			$parentRecordNumbers[$columnKey]++;
 			$this->cObj->parentRecordNumber = $parentRecordNumbers[$columnKey];
-			$columns[$columnKey] .= $this->cObj->cObjGetSingle(
+
+			// we render each child into the children key to provide them prerendered for usage with your own templating
+			$parentGridData['tx_gridelements_view_child_' . $child['uid']] = $this->cObj->cObjGetSingle(
 				$typoScriptSetup['columns.'][$columnSetupKey]['renderObj'],
 				$typoScriptSetup['columns.'][$columnSetupKey]['renderObj.']
 			);
-			//			}
+			// then we assign the prerendered child to the appropriate column
+			if(isset($columns[$column_number])) {
+				$parentGridData['tx_gridelements_view_columns'][$column_number] .= $parentGridData['tx_gridelements_view_child_' . $child['uid']];
+			}
+			unset($columns);
 		}
+
+		unset($typoScriptSetup);
+		unset($child);
 	}
 
 	/**
 	 * renders the columns of the grid container and returns the actual content
 	 *
-	 * @param   array   $columns: The columns of the grid container containing the HTML output of their children
 	 * @param   array   $setup: The adjusted setup of the grid container
 	 * @return  array   $content: The raw HTML output of the grid container before stdWrap functions will be applied to it
 	 *
 	 */
-	public function renderColumnsIntoParentGrid($columns = array(), $setup = array()) {
+	public function renderColumnsIntoParentGrid($setup = array()) {
 
 		$content = '';
 
-		foreach ($columns as $column => $columnContent) {
+		foreach ($this->cObj->data['tx_gridelements_view_columns'] as $column => $columnContent) {
 			// if there are any columns available, we have to determine the corresponding TS setup
 			// and if there is none we are going to use the default setup
-			$tempSetup = isset($setup['columns.'][$column])
-				? $setup['columns.'][$column]
+			$tempSetup = isset($setup['columns.'][$column . '.'])
+				? $setup['columns.'][$column . '.']
 				: $setup['columns.']['default.'];
 			// now we just have to unset the renderObj
 			// before applying the rest of the keys via the usual stdWrap operations
 			unset($tempSetup['renderObj']);
 			unset($tempSetup['renderObj.']);
-			$columns[$column] = count($tempSetup)
+
+			// we render each column into the column key to provide them prerendered for usage  with your own templating
+			$this->cObj->data['tx_gridelements_view_column_' . $column] = count($tempSetup)
 				? $this->cObj->stdWrap($columnContent, $tempSetup)
 				: $columnContent;
-			$content .= $columns[$column];
+			$content .= $this->cObj->data['tx_gridelements_view_column_' . $column];
 		}
 
 		return $content;
@@ -473,16 +390,6 @@ class tx_gridelements_view extends tslib_cObj {
 			),
 			','
 		);
-				/*trim(
-			/*( .
-				',' .
-					$GLOBALS['TSFE']->register['tt_content_shortcut_recursive'] ?
-					$this->cObj->getTreeList(
-						$this->cObj->data['uid'],
-						$GLOBALS['TSFE']->register['tt_content_shortcut_recursive']
-					) : ''),
-			','
-		);*/
 	}
 
 	/**

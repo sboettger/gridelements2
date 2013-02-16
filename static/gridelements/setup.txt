@@ -3,12 +3,22 @@ lib.gridelements.defaultGridSetup { // stdWrap functions being applied to each e
 		default {
 			renderObj = COA
 			renderObj {
-				10 = LOAD_REGISTER
+			    # You can use registers to i.e. provide different image settings for each column
+				# 10 = LOAD_REGISTER
 				20 =< tt_content
-				30 = RESTORE_REGISTER
+			    # And you can reset the register later on
+				# 30 = RESTORE_REGISTER
 			}
 		}
 	}
+	# if you want to provide your own templating, just insert a cObject here
+	# this will prevent the collected content from being rendered directly
+	# i.e. cObject = TEMPLATE or cObject = FLUIDTEMPLATE will be available from the core
+	# the content will be available via fieldnames like
+	# tx_gridelements_view_columns (an array containing each column)
+	# or tx_gridelements_view_children (an array containing each child)
+	# tx_gridelements_view_column_123 (123 is the number of the column)
+	# or tx_gridelements_view_child_123 (123 is the UID of the child)
 }
 
 lib.tt_content.shortcut.pages = COA

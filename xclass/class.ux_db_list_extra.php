@@ -364,7 +364,7 @@ class ux_localRecordList extends localRecordList {
 					if ($this->totalItems > $this->itemsLimitPerTable) {
 						$countOnFirstPage = $this->totalItems > $this->itemsLimitSingleTable ? $this->itemsLimitSingleTable : $this->totalItems;
 						$hasMore = ($this->totalItems > $this->itemsLimitSingleTable);
-						$iOut .= '<tr><td colspan="' . count($this->fieldArray)+$this->maxDepth . '" style="padding:5px;">
+						$iOut .= '<tr><td colspan="' . (count($this->fieldArray)+$this->maxDepth) . '" style="padding:5px;">
 								<a href="'.htmlspecialchars($this->listURL() . '&table=' . rawurlencode($table)) . '">' .
 							'<img' . t3lib_iconWorks::skinImg($this->backPath,'gfx/pildown.gif', 'width="14" height="14"') .' alt="" />'.
 							' <i>[1 - ' . $countOnFirstPage . ($hasMore ? '+' : '') . ']</i></a>
@@ -941,4 +941,8 @@ class ux_localRecordList extends localRecordList {
 		return $out;
 	}
 
+}
+
+if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/xclass/class.ux_db_list_extra.php'])) {
+	include_once($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/xclass/class.ux_db_list_extra.php']);
 }
