@@ -164,14 +164,14 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 				if (is_array($parserRow['columns.']) && count($parserRow['columns.']) > 0) {
 					foreach ($parserRow['columns.'] as $parserColumns) {
 						$name = $this->lang->sL($parserColumns['name'], true);
-						if ($parserColumns['colPos'] != '') {
+						if ($parserColumns['colPos'] !== '') {
 							$colPosValues[intval($parserColumns['colPos'])] = array(
 								'name' => $name,
 								'allowed' => $parserColumns['allowed']
 							);
 						} else {
 							$colPosValues[32768] = array(
-								'name' => $name ? $name : $this->lang->getLL('notAssigned'),
+								'name' => $this->lang->getLL('notAssigned'),
 								'allowed' => ''
 							);
 						}
@@ -451,13 +451,13 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 						? ' rowspan="' . $rowSpan . '"'
 						: '') .
 					'id="column-' . $specificUid . 'x' . $columnKey . '" class="t3-gridCell t3-page-column t3-page-column-' . $columnKey .
-					(!isset($columnConfig['colPos'])
+					(!isset($columnConfig['colPos']) || $columnConfig['colPos'] == ''
 						? ' t3-gridCell-unassigned'
 						: '') .
-					(isset($columnConfig['colspan'])
+					(isset($columnConfig['colspan']) && $columnConfig['colPos'] != ''
 						? ' t3-gridCell-width' . $colSpan
 						: '') .
-					(isset($columnConfig['rowspan'])
+					(isset($columnConfig['rowspan']) && $columnConfig['colPos'] != ''
 						? ' t3-gridCell-height' . $rowSpan
 						: '') .
 					' ' . (count($allowedCTypes) ? join(' ', $allowedCTypes) : 't3-allow-all') .

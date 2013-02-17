@@ -42,21 +42,23 @@ if(typeof GridElementsDD === "undefined"){
 		var rowHeaders = Ext.select('.t3-row-header').elements;
 		Ext.each(rowHeaders, function(rowHeader){
 			var rowHeaderLinkNew = Ext.get(rowHeader).select('a').first();
-			var onClick = rowHeaderLinkNew.getAttribute('onclick');
-			if (!onClick.match(/tx_gridelements_allowed=/)) {
-				var parentColumn = Ext.get(rowHeader).findParent('td.t3-gridCell', 4);
-				if(parentColumn){
-					var allowedCTypes = [];
-					var currentClasses = Ext.get(parentColumn).dom.className.split(' ');
-					for (var i = 0; i < currentClasses.length; i++) {
-						var currentClass = currentClasses[i];
-						if(currentClass.substr(0, 9) == 't3-allow-'){
-							allowedCTypes.push(currentClass.substr(9));
+			if(rowHeaderLinkNew !== null) {
+				var onClick = rowHeaderLinkNew.getAttribute('onclick');
+				if (onClick !== null && !onClick.match(/tx_gridelements_allowed=/)) {
+					var parentColumn = Ext.get(rowHeader).findParent('td.t3-gridCell', 4);
+					if(parentColumn){
+						var allowedCTypes = [];
+						var currentClasses = Ext.get(parentColumn).dom.className.split(' ');
+						for (var i = 0; i < currentClasses.length; i++) {
+							var currentClass = currentClasses[i];
+							if(currentClass.substr(0, 9) == 't3-allow-'){
+								allowedCTypes.push(currentClass.substr(9));
+							}
 						}
-					}
-					if(allowedCTypes[0] !== 'all'){
-						onClick = onClick.replace('db_new_content_el.php?', 'db_new_content_el.php?tx_gridelements_allowed=' + allowedCTypes.join(',') + '&');
-						rowHeaderLinkNew.set({onclick: onClick});
+						if(allowedCTypes[0] !== 'all'){
+							onClick = onClick.replace('db_new_content_el.php?', 'db_new_content_el.php?tx_gridelements_allowed=' + allowedCTypes.join(',') + '&');
+							rowHeaderLinkNew.set({onclick: onClick});
+						}
 					}
 				}
 			}
@@ -92,24 +94,26 @@ if(typeof GridElementsDD === "undefined"){
 		Ext.each(dropZonePar, function(currentColHeader){
 			var parentCell = Ext.get(currentColHeader).parent(),
 				dropZoneID = null;
-			if(Ext.get(parentCell).id.substr(0, 6) != 'column') {
-				var parentCellClass = Ext.get(parentCell).dom.className.split(' ');
-				for(i = 0; i < parentCellClass.length; i++) {
-					if(parentCellClass[i].substr(0, 15) == 't3-page-column-') {
-						dropZoneID = 'DD_DROP_PIDx' + parentCellClass[i].substr(15);
-					}
-				};
-			} else {
-				dropZoneID = Ext.get(parentCell).id;
+			if(Ext.get(parentCell).dom.className.search(/t3-gridCell-unassigned/g) == -1) {
+				if(Ext.get(parentCell).id.substr(0, 6) != 'column') {
+					var parentCellClass = Ext.get(parentCell).dom.className.split(' ');
+					for(i = 0; i < parentCellClass.length; i++) {
+						if(parentCellClass[i].substr(0, 15) == 't3-page-column-') {
+							dropZoneID = 'DD_DROP_PIDx' + parentCellClass[i].substr(15);
+						}
+					};
+				} else {
+					dropZoneID = Ext.get(parentCell).id;
+				}
+				var currentDropZone = document.createElement('div');
+				Ext.get(currentDropZone).addClass([
+					'x-dd-makedroptarget',
+					'x-dd-droptargetgroup-els'
+				]);
+				currentDropZone.innerHTML = dropZoneTpl;
+				Ext.get(currentDropZone).select('div.x-dd-droptargetarea').set({title: dropZoneID});
+				Ext.get(currentDropZone).insertAfter(currentColHeader);
 			}
-			var currentDropZone = document.createElement('div');
-			Ext.get(currentDropZone).addClass([
-				'x-dd-makedroptarget',
-				'x-dd-droptargetgroup-els'
-			]);
-			currentDropZone.innerHTML = dropZoneTpl;
-			Ext.get(currentDropZone).select('div.x-dd-droptargetarea').set({title: dropZoneID});
-			Ext.get(currentDropZone).insertAfter(currentColHeader);
 		});
 
 		// add dropzones within .t3-page-ce existing elements

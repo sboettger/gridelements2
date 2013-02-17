@@ -95,7 +95,8 @@ class tx_gridelements_itemsprocfunc_abstract {
 									$column['allowed']
 								);
 								$backendLayout['__colPosList'][] = $column['colPos'];
-								$backendLayout['columns'][$column['colPos']] = $column['allowed'];
+								$backendLayout['columns'][$column['colPos']] = $column['allowed'] ? $column['allowed'] : '*';
+								$backendLayout['allowed'] .= $backendLayout['allowed'] ? ',' . $backendLayout['column'][$column['colPos']] : $backendLayout['column'][$column['colPos']];
 							}
 						}
 					}

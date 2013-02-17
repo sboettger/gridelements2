@@ -219,7 +219,13 @@ class tx_gridelements_view extends tslib_cObj {
 		$GLOBALS['TSFE']->cObjectDepthCounter -= $counter;
 
 		$this->resetCurrentParentGrid($currentParentGrid);
-		$this->cObj->data['tx_gridelements_view_columns'] = $parentGridData['tx_gridelements_view_columns'];
+		if(count($sortColumns)) {
+			foreach ($sortColumns as $sortKey) {
+				if (isset($parentGridData['tx_gridelements_view_columns'][$sortKey])) {
+					$this->cObj->data['tx_gridelements_view_columns'][$sortKey] = $parentGridData['tx_gridelements_view_columns'][$sortKey];
+				}
+			}
+		}
 		unset($parentGridData);
 		unset($currentParentGrid);
 
