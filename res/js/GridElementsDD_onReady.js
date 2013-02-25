@@ -22,7 +22,11 @@ if(typeof GridElementsDD === "undefined"){
 		for (var i = 0; i < pageColumnsAllowedCTypes.length; i++) {
 			var currentColClass = pageColumnsAllowedCTypes[i].split(':');
 			var currentCol = Ext.select('td.t3-page-column-' + currentColClass[0]);
-			Ext.get(currentCol).addClass(currentColClass[1]);
+			Ext.each(currentCol, function(column) {
+				if(!Ext.get(column).hasClass('t3-gridCell')) {
+					Ext.get(column).addClass(currentColClass[1]);
+				}
+			});
 		}
 
 		// add topLevel class to pageColumns

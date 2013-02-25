@@ -316,7 +316,7 @@ class ux_localRecordList extends localRecordList {
 				$cc = 0;
 
 				$lastColPos='';
-				foreach($accRows as $row)	{
+				foreach($accRows as $key => $row)	{
 					// Render item row if counter < limit
 					if ($cc < $this->iLimit) {
 						$cc++;
@@ -324,10 +324,18 @@ class ux_localRecordList extends localRecordList {
 
 						if (isset($row['colPos']) && ($row['colPos'] != $lastColPos)) {
 							$lastColPos = $row['colPos'];
+							$this->showMoveUp = false;
 							$column = t3lib_BEfunc::getProcessedValueExtra($table, 'colPos', $row['colPos'], 100, $row['uid']);
 							$iOut .= '<tr><td></td><td colspan="' . (count($this->fieldArray)-1+$this->maxDepth) . '" style="padding:5px;"><br /><strong>' .
 								$GLOBALS['LANG']->sL('LLL:EXT:gridelements/locallang_db.xml:list.columnName') . ' ' .
 								(($column) ? $column : $row['colPos']) . '</strong></td></tr>';
+						} else {
+							$this->showMoveUp = true;
+						}
+						if (isset($row['colPos']) && isset($accRows[$key + 1]) && $row['colPos'] != $accRows[$key + 1]['colPos']) {
+							$this->showMoveDown = false;
+						} else {
+							$this->showMoveDown = true;
 						}
 						$iOut.= $this->renderListRow($table,$row,$cc,$titleCol,$thumbsCol);
 
@@ -537,8 +545,12 @@ class ux_localRecordList extends localRecordList {
 
 				// "Up/Down" links
 				if ($permsEdit && $GLOBALS['TCA'][$table]['ctrl']['sortby']  && !$this->sortField && !$this->searchLevels) {
-					if (isset($this->currentTable['prev'][$row['uid']]))	{	// Up
-						$params='&cmd['.$table.']['.$row['uid'].'][move]='.$this->currentTable['prev'][$row['uid']];
+					if (isset($this->currentTable['prev'][$row['uid']]) && $this->showMoveUp === true)	{	// Up
+						if($this->lastMoveDownParams) {
+							$params= $this->lastMoveDownParams;
+						} else {
+							$params='&cmd['.$table.']['.$row['uid'].'][move]='.$this->currentTable['prev'][$row['uid']];
+						}
 						$cells['moveUp'] = '<a href="#" onclick="' . htmlspecialchars(
 							'return jumpToUrl(\'' . $GLOBALS['SOBE']->doc->issueCommand($params, -1) . '\');'
 						) .'" title="'.$GLOBALS['LANG']->getLL('moveUp', TRUE) . '">' .
@@ -547,8 +559,9 @@ class ux_localRecordList extends localRecordList {
 					} else {
 						$cells['moveUp'] = $this->spaceIcon;
 					}
-					if ($this->currentTable['next'][$row['uid']])	{	// Down
+					if ($this->currentTable['next'][$row['uid']] && $this->showMoveDown === true)	{	// Down
 						$params='&cmd['.$table.']['.$row['uid'].'][move]='.$this->currentTable['next'][$row['uid']];
+						$this->lastMoveDownParams = $params;
 						$cells['moveDown']='<a href="#" onclick="'.htmlspecialchars('return jumpToUrl(\''.$GLOBALS['SOBE']->doc->issueCommand($params,-1).'\');').'" title="'.$GLOBALS['LANG']->getLL('moveDown', TRUE) . '">' .
 							t3lib_iconWorks::getSpriteIcon('actions-move-down') .
 							'</a>';
@@ -788,9 +801,9 @@ class ux_localRecordList extends localRecordList {
 			$this->addElement_tdCssClass['_LOCALIZATION_']  = 'col-localizationa';
 			$this->addElement_tdCssClass['_LOCALIZATION_b'] = 'col-localizationb';
 
-			if ($table == 'tt_content') {
-				$elementChilds = tx_gridelements_helper::getInstance()->getChildren($table, $row['uid']);
-				if (count($elementChilds) > 0) {
+			if ($table == 'tt_content' && $row['CType'] == 'gridelements_pi1') {
+				$elementChildren = tx_gridelements_helper::getInstance()->getChildren($table, $row['uid']);
+				if (count($elementChildren) > 0) {
 					$theData['_EXPANDABLE_'] = true;
 					$theData['_EXPAND_ID_'] = $table . ':' . $row['uid'];
 					$theData['_LEVEL_'] = $level;

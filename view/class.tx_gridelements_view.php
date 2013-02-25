@@ -202,6 +202,7 @@ class tx_gridelements_view extends tslib_cObj {
 		$currentParentGrid = $this->copyCurrentParentGrid();
 		$columns = $this->getUsedColumns($sortColumns);
 		$parentGridData = $this->getParentGridData($currentParentGrid['data']);
+		$parentGridData['tx_gridelements_view_columns'] = $columns;
 
 		$counter = count($this->cObj->data['tx_gridelements_view_children']);
 		$parentRecordNumbers = array();

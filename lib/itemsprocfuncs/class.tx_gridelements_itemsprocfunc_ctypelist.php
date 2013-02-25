@@ -67,11 +67,11 @@ class tx_gridelements_itemsprocfunc_CTypeList extends tx_gridelements_itemsprocf
 	 */
 	public function checkForAllowedCTypes(&$items, $pid, $pageColumn, $gridContainerId, $gridColumn) {
 		if($pageColumn >= 0) {
-			$column = $pageColumn;
+			$column = $pageColumn ? $pageColumn : 0;
 			$backendLayout = $this->getSelectedBackendLayout($pid);
 		} else {
 			$this->init($pid);
-			$column = $gridColumn;
+			$column = $gridColumn ? $gridColumn : 0;
 			$gridElement = $this->layoutSetup->cacheCurrentParent($gridContainerId, TRUE);
 			$backendLayout = $this->layoutSetup->getLayoutSetup($gridElement['tx_gridelements_backend_layout']);
 		}
