@@ -132,6 +132,7 @@ class tx_gridelements_view extends tslib_cObj {
 			);
 
 			if (!$GLOBALS['TYPO3_DB']->sql_error()) {
+				$this->cObj->data['tx_gridelements_view_children'] = array();
 				while ($child = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 					// Versioning preview:
 					$GLOBALS['TSFE']->sys_page->versionOL('tt_content', $child);
@@ -210,7 +211,10 @@ class tx_gridelements_view extends tslib_cObj {
 
 		// each of the children will now be rendered separately and the output will be added to it's particular column
 		foreach ($this->cObj->data['tx_gridelements_view_children'] as $child) {
-			$this->renderChildIntoParentColumn($columns, $child, $parentGridData, $parentRecordNumbers, $typoScriptSetup);
+			$renderedChild = $child;
+			$this->renderChildIntoParentColumn($columns, $renderedChild, $parentGridData, $parentRecordNumbers, $typoScriptSetup);
+			$currentParentGrid['data']['tx_gridelements_view_child_' . $child['uid']] = $renderedChild;
+			unset($renderedChild);
 		}
 
 		// now we can reset the depth counter and the data array so that the element will behave just as usual
@@ -221,6 +225,7 @@ class tx_gridelements_view extends tslib_cObj {
 
 		$this->resetCurrentParentGrid($currentParentGrid);
 		if(count($sortColumns)) {
+			$this->cObj->data['tx_gridelements_view_columns'] = array();
 			foreach ($sortColumns as $sortKey) {
 				if (isset($parentGridData['tx_gridelements_view_columns'][$sortKey])) {
 					$this->cObj->data['tx_gridelements_view_columns'][$sortKey] = $parentGridData['tx_gridelements_view_columns'][$sortKey];
@@ -313,7 +318,7 @@ class tx_gridelements_view extends tslib_cObj {
 	 * @param array $typoScriptSetup
 	 * @return  void
 	 */
-	public function renderChildIntoParentColumn($columns, $child, &$parentGridData, &$parentRecordNumbers, $typoScriptSetup = array()) {
+	public function renderChildIntoParentColumn($columns, &$child, &$parentGridData, &$parentRecordNumbers, $typoScriptSetup = array()) {
 
 		$column_number = intval($child['tx_gridelements_columns']);
 		$columnKey = $column_number . '.';
@@ -332,19 +337,18 @@ class tx_gridelements_view extends tslib_cObj {
 			$this->cObj->parentRecordNumber = $parentRecordNumbers[$columnKey];
 
 			// we render each child into the children key to provide them prerendered for usage with your own templating
-			$parentGridData['tx_gridelements_view_child_' . $child['uid']] = $this->cObj->cObjGetSingle(
+			$child = $this->cObj->cObjGetSingle(
 				$typoScriptSetup['columns.'][$columnSetupKey]['renderObj'],
 				$typoScriptSetup['columns.'][$columnSetupKey]['renderObj.']
 			);
 			// then we assign the prerendered child to the appropriate column
 			if(isset($columns[$column_number])) {
-				$parentGridData['tx_gridelements_view_columns'][$column_number] .= $parentGridData['tx_gridelements_view_child_' . $child['uid']];
+				$parentGridData['tx_gridelements_view_columns'][$column_number] .= $child;
 			}
 			unset($columns);
 		}
 
 		unset($typoScriptSetup);
-		unset($child);
 	}
 
 	/**
@@ -375,6 +379,10 @@ class tx_gridelements_view extends tslib_cObj {
 				: $columnContent;
 			$content .= $this->cObj->data['tx_gridelements_view_column_' . $column];
 		}
+
+		t3lib_utility_Debug::debug($this->cObj->data);
+		t3lib_utility_Debug::debug('######################################################################################');
+
 
 		return $content;
 
