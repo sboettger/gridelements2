@@ -30,13 +30,14 @@ if(typeof GridElementsDD === "undefined"){
 		}
 
 		// add topLevel class to pageColumns
-		var mainGrid = Ext.select('table.t3-page-columns').elements[0];
+		var mainGrid = Ext.select('table.t3-page-columns, table.t3-page-langMode').elements[0];
 		if(mainGrid){
-			var topLevelTDs = Ext.get(mainGrid).select('> tbody > tr > td.t3-page-column');
+			var topLevelTDs = Ext.get(mainGrid).select('> tbody > tr > td');
 			Ext.each(topLevelTDs, function(topLevelTD){
 				Ext.get(topLevelTD).addClass('t3-gridTL');
+				alert(Ext.get(topLevelTD).el.dom.className);
 				//console.log(topLevelTD);
-				if(!Ext.get(topLevelTD).el.dom.className.match(/t3-allow-/)){
+				if(Ext.get(topLevelTD).el.dom === undefined || !Ext.get(topLevelTD).el.dom.className.match(/t3-allow-/)) {
 					Ext.get(topLevelTD).addClass('t3-allow-all');
 				}
 			});

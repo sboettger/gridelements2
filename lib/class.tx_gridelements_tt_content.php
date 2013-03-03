@@ -103,6 +103,7 @@ class tx_gridelements_tt_content {
 		}
 
 		$itemUidList = '';
+		t3lib_utility_Debug::debug($params['items']);
 		if(count($params['items']) > 1) {
 			foreach($params['items'] as $key => $container) {
 				if($container[1] > 0) {
@@ -120,7 +121,8 @@ class tx_gridelements_tt_content {
 	 * removes items of the children chain from the list of selectable containers
 	 *
 	 * @param array $params
-	 * @retrun void
+	 * @param $possibleContainers
+	 * @return void
 	 */
 	public function removesItemsFromListOfSelectableContainers(array &$params, &$possibleContainers) {
 		if ($params['row']['CType'] == 'gridelements_pi1' && count($params['items']) > 1) {
@@ -128,6 +130,10 @@ class tx_gridelements_tt_content {
 			$params['items'] = array(
 				0 => array_shift($items)
 			);
+
+			foreach ($items as $item) {
+				$possibleContainers[$item['1']] = $item;
+			}
 
 			if ($params['row']['uid'] > 0) {
 				$this->lookForChildContainersRecursively(intval($params['row']['uid']), $possibleContainers);
@@ -186,7 +192,7 @@ class tx_gridelements_tt_content {
 	 * Recursive function to remove any container from the list of possible containers
 	 * that is already a subcontainer on any level of the current container
 	 *
-	 * @param CSV	$containerId: A list determining containers that should be checked
+	 * @param CSV	$containerIds: A list determining containers that should be checked
 	 * @param array	$possibleContainers: The result list containing the remaining containers after the check
 	 * @return	void
 	 */
