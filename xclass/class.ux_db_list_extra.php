@@ -729,6 +729,24 @@ class ux_localRecordList extends localRecordList {
 
 			$theIcon = $this->clickMenuEnabled ? $GLOBALS['SOBE']->doc->wrapClickMenuOnIcon($iconImg,$table,$row['uid']) : $iconImg;
 
+			// Have labels respect possible itemsProcFunc results
+			/** @var $formEngine t3lib_TCEforms */
+			$formEngine = t3lib_div::makeInstance('t3lib_TCEForms');
+			if(isset($GLOBALS['TCA'][$table]['columns'])) {
+				foreach($GLOBALS['TCA'][$table]['columns'] as $field => $fieldSetup) {
+					if(isset($fieldSetup['config']['itemsProcFunc'])) {
+						$GLOBALS['TCA'][$table]['columns'][$field]['config']['items'] = $formEngine->procItems(
+							$fieldSetup['config']['items'],
+							$fieldSetup['config']['itemsProcFunc'],
+							$fieldSetup['config'],
+							$table,
+							$row,
+							$field
+						);
+					}
+				}
+			}
+
 			// Preparing and getting the data-array
 			$theData = Array();
 			foreach($this->fieldArray as $fCol)	{
@@ -895,12 +913,7 @@ class ux_localRecordList extends localRecordList {
 				if ($ccount == 1) {
 					$colsp = ' colspan="' . ($this->maxDepth-$level) . '"';
 				}
-#				t3lib_utility_Debug::debug($data[$vKey]);
-#				if ($vKey == 'level') {
-#					$colsp = ' colspan="' . 10 . '"';
-#				} else {
-#					$colsp = '';
-#				}
+
 				if ($lastKey) {
 					$cssClass = $this->addElement_tdCssClass[$lastKey];
 					if ($this->oddColumnsCssClass && $ccount % 2 == 0) {

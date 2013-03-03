@@ -380,10 +380,6 @@ class tx_gridelements_view extends tslib_cObj {
 			$content .= $this->cObj->data['tx_gridelements_view_column_' . $column];
 		}
 
-		t3lib_utility_Debug::debug($this->cObj->data);
-		t3lib_utility_Debug::debug('######################################################################################');
-
-
 		return $content;
 
 	}
