@@ -79,7 +79,129 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 			if($fieldArray['tx_gridelements_backend_layout']) {
 				$GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds']['*,gridelements_pi1'] = $this->layoutSetup->getFlexformConfiguration($fieldArray['tx_gridelements_backend_layout']);
 			}
-			$this->setFieldEntries($fieldArray, $pid);
+			if(abs($pid) > 0) {
+				$this->setDefaultFieldValues($fieldArray, $pid);
+				$this->getDefaultFlexformValues($fieldArray);
+			}
+		}
+		$this->setFieldEntries($fieldArray, $pid);
+	}
+
+	/**
+	 * set default field values for new records
+	 *
+	 * @param array $fieldArray
+	 * @param int $pid
+	 * @return void
+	 */
+
+	public function setDefaultFieldValues(&$fieldArray, $pid = 0) {
+		// Default values:
+		$newRow = array(); // Used to store default values as found here:
+
+		// Default values as set in userTS:
+		$TCAdefaultOverride = $GLOBALS['BE_USER']->getTSConfigProp('TCAdefaults');
+		if (is_array($TCAdefaultOverride['tt_content.'])) {
+			foreach ($TCAdefaultOverride['tt_content.'] as $theF => $theV) {
+				if (isset($GLOBALS['TCA']['tt_content']['columns'][$theF])) {
+					$newRow[$theF] = $theV;
+				}
+			}
+		}
+
+		if ($pid < 0) {
+			$record = t3lib_beFunc::getRecord('tt_content', abs($pid), 'pid');
+			$id = $record['pid'];
+			unset($record);
+		} else {
+			$id = intval($pid);
+		}
+
+		$pageTS = t3lib_beFunc::getPagesTSconfig($id);
+
+		if (isset($pageTS['TCAdefaults.'])) {
+			$TCAPageTSOverride = $pageTS['TCAdefaults.'];
+			if (is_array($TCAPageTSOverride['tt_content.'])) {
+				foreach ($TCAPageTSOverride['tt_content.'] as $theF => $theV) {
+					if (isset($GLOBALS['TCA']['tt_content']['columns'][$theF])) {
+						$newRow[$theF] = $theV;
+					}
+				}
+			}
+		}
+
+		// Default values as submitted:
+		$this->defVals = t3lib_div::_GP('defVals');
+		$this->overrideVals = t3lib_div::_GP('overrideVals');
+		if (!is_array($this->defVals) && is_array($this->overrideVals))	{
+			$this->defVals = $this->overrideVals;
+		}
+		if (is_array($this->defVals['tt_content'])) {
+			foreach ($this->defVals['tt_content'] as $theF => $theV) {
+				if (isset($GLOBALS['TCA']['tt_content']['columns'][$theF])) {
+					$newRow[$theF] = $theV;
+				}
+			}
+		}
+
+		// Fetch default values if a previous record exists
+		if ($pid < 0 && $GLOBALS['TCA']['tt_content']['ctrl']['useColumnsForDefaultValues']) {
+			// Fetches the previous record:
+			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'tt_content', 'uid=' . abs($id) . t3lib_BEfunc::deleteClause('tt_content'));
+			if ($row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
+				// Gets the list of fields to copy from the previous record.
+				$fArr = t3lib_div::trimExplode(',', $GLOBALS['TCA']['tt_content']['ctrl']['useColumnsForDefaultValues'], 1);
+				foreach ($fArr as $theF) {
+					if (isset($GLOBALS['TCA']['tt_content']['columns'][$theF])) {
+						$newRow[$theF] = $row[$theF];
+					}
+				}
+			}
+		}
+		$fieldArray = array_merge($newRow, $fieldArray);
+	}
+
+	/**
+	 * checks for default flexform values for new records and sets them accordingly
+	 *
+	 * @param array $fieldArray
+	 * @return void
+	 */
+
+	public function getDefaultFlexformValues(&$fieldArray) {
+		foreach($GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds'] as $key => $dataStructure) {
+			$types = t3lib_div::trimExplode(',', $key);
+			if(($types[0] == $fieldArray['list_type'] || $types[0] == '*') && ($types[1] == $fieldArray['CType'] || $types[1] == '*')) {
+				$fieldArray['pi_flexform'] = $this->extractDefaultDataFromDatastructure($dataStructure);
+			}
+		}
+	}
+
+	/**
+	 * extracts the default data out of a given XML data structure
+	 *
+	 * @param string $dataStructure
+	 * @return string $defaultData
+	 */
+
+	public function extractDefaultDataFromDataStructure($dataStructure) {
+		if($dataStructure) {
+			$structureArray = t3lib_div::xml2array($dataStructure);
+			foreach($structureArray['sheets'] as $sheetName => $sheet) {
+				if(is_array($sheet['ROOT']['el']) && count($sheet['ROOT']['el']) > 0) {
+					$elArray = array();
+					foreach($sheet['ROOT']['el'] as $elName => $elConf) {
+						$config = $elConf['TCEforms']['config'];
+						$elArray[$elName]['vDEF'] = $config['default'];
+						if(!$elArray[$elName]['vDEF'] && $config['type'] == 'select' && count($config['items']) > 0) {
+							$elArray[$elName]['vDEF'] = $config['items'][0][1];
+						}
+					}
+					$sheetArray['data'][$sheetName]['lDEF'] = $elArray;
+				}
+			};
+			$flexformTools = t3lib_div::makeInstance('t3lib_flexformtools');
+			return $flexformTools->flexArray2Xml($sheetArray, true);
 		}
 	}
 

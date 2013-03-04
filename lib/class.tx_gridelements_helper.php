@@ -27,7 +27,7 @@ class tx_gridelements_helper {
 		return self::$instance;
 	}
 
-	public function getChildren($table = '', $uid = 0) {
+	public function getChildren($table = '', $uid = 0, $sortingField = '', $sortRev = 0) {
 		$retVal = array();
 
 		if (trim($table) && $uid > 0) {
@@ -40,9 +40,23 @@ class tx_gridelements_helper {
 
 			foreach($children as $key => $child) {
 				if ($child->getElement()->getTable() == $table && $child->getField() == 'tx_gridelements_children') {
-					$retVal[] = $child->getElement();
+					$record = $child->getElement()->getRecord();
+
+					if (trim($sortingField) && isset($record[$sortingField]) && $sortingField != 'sorting') {
+						$sortField = $record[$sortingField];
+					} else {
+						$sortField = sprintf('%1$011d', $record['sorting']);
+					}
+					$sortKey = sprintf('%1$011d', $record['tx_gridelements_columns']) . '.' . $sortField . ':' . sprintf('%1$011d', $record['uid']);
+
+					$retVal[$sortKey] = $child->getElement();
 				}
 			}
+		}
+
+		ksort($retVal);
+		if ($sortRev) {
+			$retVal = array_reverse($retVal);
 		}
 
 		return $retVal;

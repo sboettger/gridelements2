@@ -27,5 +27,4 @@ return array(
 	'tx_gridelements_db_listhook'						=> $extensionPath . 'hooks/class.tx_gridelements_db_listhook.php',
 	'tx_gridelements_db_list_extrahook'					=> $extensionPath . 'hooks/class.tx_gridelements_db_list_extrahook.php',
 
-	'ux_tvxclassversion'								=> $extensionPath . 'xclass/class.ux_tvxclassversion.php',
 );

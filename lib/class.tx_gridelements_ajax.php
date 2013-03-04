@@ -96,7 +96,9 @@ class tx_gridelements_ajax {
 
 			$this->initializeTemplateContainer();
 
-			$elementChilds = tx_gridelements_helper::getInstance()->getChildren($table, $uid);
+			$elementChilds = tx_gridelements_helper::getInstance()->getChildren(
+				$table, $uid, t3lib_div::_GP('sortField'), (int) t3lib_div::_GP('sortRev')
+			);
 
 			$row = t3lib_BEfunc::getRecord($table, $uid);
 			$recordList = $this->getRecordList($table, $uid, $row);
@@ -116,8 +118,6 @@ class tx_gridelements_ajax {
 				}
 			}
 
-#			t3lib_utility_Debug::debug($elementChilds);
-#			die;
 			$ajaxObj->addContent('list', $listRows);
 		}
 

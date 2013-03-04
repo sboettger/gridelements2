@@ -6,85 +6,84 @@
  */
 GridElementsListView = function() {
 
-    return {
-        onReady: function() {
-//            alert('ready');
-    /*
-            Ext.get(pasteRefHeaderLink).set({
-                href: '#',
-                onclick: "GridElementsDD.ajaxThenReload('" + top.pasteTpl.replace('DD_REFYN', 1).replace('DD_DRAG_UID', clipboardItemUid).replace('DD_DROP_UID', dropZoneID) + "'); return false;"
-            });
-    */
-        },
+	return {
+		elExpandCollapse: function(id, sortField, level) {
+			var el = Ext.get(Ext.query("a[rel='" + id + "']>span").first());
 
-        elExpandCollapse: function(id, level) {
-            var el = Ext.get(Ext.query("a[rel='" + id + "']>span").first());
+			if (el.hasClass('t3-icon-pagetree-collapse')) {
+				el.removeClass('t3-icon-pagetree-collapse'); //.addClass('t3-icon-pagetree-expand');
+				GridElementsListView.addSpinner(el);
 
-            if (el.hasClass('t3-icon-pagetree-collapse')) {
-                el.removeClass('t3-icon-pagetree-collapse'); //.addClass('t3-icon-pagetree-expand');
-                GridElementsListView.addSpinner(el);
+				var idParam = id.split(':');
+				var sorting = sortField.split(':');
+				Ext.Ajax.request({
+					url: 'ajax.php',
+					params: {
+						ajaxID: 'tx_gridelements::controller',
+						cmd: 'getListRows',
+						table: idParam[0],
+						uid: idParam[1],
+						level: level,
+						sortField: sorting[0],
+						sortRev: sorting[1]
+					},
+					timeout: 10000,
+					success: function(req){
+						GridElementsListView.ajaxSuccess(el, req);
+					},
+					failure: function() {
+						GridElementsListView.ajaxFailure(el);
+					}
+				});
 
-                var idParam = id.split(':');
-                Ext.Ajax.request({
-                    url: 'ajax.php',
-                    params: { ajaxID: 'tx_gridelements::controller', cmd: 'getListRows', table: idParam[0], uid: idParam[1], level: level },
-                    timeout: 10000,
-                    success: function(req){
-                        GridElementsListView.ajaxSuccess(el, req);
-                    },
-                    failure: function() {
-                        GridElementsListView.ajaxFailure(el);
-                    }
-                });
+			} else {
+				el.removeClass('t3-icon-pagetree-expand').addClass('t3-icon-actions').addClass('t3-icon-pagetree-collapse');
+				GridElementsListView.removeSpinner(el);
 
-            } else {
-                el.removeClass('t3-icon-pagetree-expand').addClass('t3-icon-actions').addClass('t3-icon-pagetree-collapse');
-                GridElementsListView.removeSpinner(el);
+				var tr =  Ext.get(el.findParent('tr'));
+				tr = tr.next();
+				var forBrealk = false;
+				for (var i=0; i <= 100; i++) {
+					var trNext = tr.next();
+					if (tr.hasClass('tr-' + el.id)) {
+						forBrealk = true;
+					}
+					tr.remove();
 
-                var tr =  Ext.get(el.findParent('tr'));
-                tr = tr.next();
-                var forBrealk = false;
-                for (var i=0; i <= 100; i++) {
-                    var trNext = tr.next();
-                    if (tr.hasClass('tr-' + el.id)) {
-                        forBrealk = true;
-                    }
-                    tr.remove();
+					if (forBrealk) {
+						break
+					} else {
+						tr = trNext;
+					}
+				}
+			}
+		},
 
-                    if (forBrealk) {
-                        break
-                    } else {
-                        tr = trNext;
-                    }
-                }
-            }
-        },
+		ajaxSuccess: function(el, req) {
+			GridElementsListView.removeSpinner(el)
+			el.removeClass('t3-icon-pagetree-collapse').addClass('t3-icon-pagetree-expand');
+			if (req.responseText) {
+				htmlRows = Ext.util.JSON.decode(req.responseText)
+			}
 
-        ajaxSuccess: function(el, req) {
-            GridElementsListView.removeSpinner(el)
-            el.removeClass('t3-icon-pagetree-collapse').addClass('t3-icon-pagetree-expand');
-            if (req.responseText) {
-                htmlRows = Ext.util.JSON.decode(req.responseText)
-            }
+			var tr =  Ext.get(el.findParent('tr'));
+			tr.insertHtml('afterEnd','<tr class="hidden tr-' + el.id + '"><td></td></tr>');
+			htmlRows.list.reverse().each(function(el) {
+				var newTr = tr.insertHtml('afterEnd',el);
+			})
+		},
 
-            var tr =  Ext.get(el.findParent('tr'));
-            tr.insertHtml('afterEnd','<tr class="hidden tr-' + el.id + '"><td></td></tr>');
-            htmlRows.list.reverse().each(function(el) {
-                var newTr = tr.insertHtml('afterEnd',el);
-            })
-        },
+		ajaxFailure: function(id) {
+			alert('ajaxFailure');
+		},
 
-        ajaxFailure: function(id) {
-            alert('ajaxFailure');
-        },
+		addSpinner: function(el) {
+			el.removeClass('t3-icon-actions').addClass('spinner');
+		},
 
-        addSpinner: function(el) {
-            el.removeClass('t3-icon-actions').addClass('spinner');
-        },
+		removeSpinner: function(el) {
+			el.addClass('t3-icon-actions').removeClass('spinner');
+		}
 
-        removeSpinner: function(el) {
-            el.addClass('t3-icon-actions').removeClass('spinner');
-        }
-
-    }
+}
 }();

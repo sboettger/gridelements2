@@ -103,7 +103,6 @@ class tx_gridelements_tt_content {
 		}
 
 		$itemUidList = '';
-		t3lib_utility_Debug::debug($params['items']);
 		if(count($params['items']) > 1) {
 			foreach($params['items'] as $key => $container) {
 				if($container[1] > 0) {

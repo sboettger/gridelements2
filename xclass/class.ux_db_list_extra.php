@@ -520,7 +520,7 @@ class ux_localRecordList extends localRecordList {
 							'">'.
 							t3lib_iconWorks::getSpriteIcon('status-status-locked') .
 							'</a>';
-				} elseif((!$this->table && $GLOBALS['BE_USER']->check('modules','web_perm')) || $level > 0) {
+				} elseif((!$this->table && $GLOBALS['BE_USER']->check('modules','web_perm'))) {
 					$cells['perms'] = $this->spaceIcon;
 				}
 				// "New record after" link (ONLY if the records in the table are sorted by a "sortby"-row or if default values can depend on previous record):
@@ -679,6 +679,101 @@ class ux_localRecordList extends localRecordList {
 		return '
 											<!-- CONTROL PANEL: '.$table.':'.$row['uid'].' -->
 											<div class="typo3-DBctrl">'.implode('',$cells).'</div>';
+	}
+
+	/**
+	 * Creates the clipboard panel for a single record in the listing.
+	 *
+	 * @param	string		The table
+	 * @param	array		The record for which to make the clipboard panel.
+	 * @return	string		HTML table with the clipboard panel (unless disabled)
+	 */
+	function makeClip($table,$row)	{
+		// Return blank, if disabled:
+		if ($this->dontShowClipControlPanels)	return '';
+		$cells=array();
+
+		$cells['pasteAfter'] = $cells['pasteInto'] = $this->spaceIcon;
+		//enables to hide the copy, cut and paste icons for localized records - doesn't make much sense to perform these options for them
+		$isL10nOverlay = $this->localizationView && $table != 'pages_language_overlay' && $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']] != 0;
+		// Return blank, if disabled:
+		// Whether a numeric clipboard pad is active or the normal pad we will see different content of the panel:
+		if ($this->clipObj->current=='normal')	{	// For the "Normal" pad:
+
+			// Show copy/cut icons:
+			$isSel = (string)$this->clipObj->isSelected($table,$row['uid']);
+			$cells['copy'] = $isL10nOverlay ? $this->spaceIcon : '<a href="#" onclick="' . htmlspecialchars('return jumpSelf(\'' . $this->clipObj->selUrlDB($table, $row['uid'], 1, ($isSel=='copy'), array('returnUrl'=>'')) . '\');') . '" title="'.$GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.copy', TRUE) . '">' .
+				((!$isSel=='copy') ? t3lib_iconWorks::getSpriteIcon('actions-edit-copy') : t3lib_iconWorks::getSpriteIcon('actions-edit-copy-release')) .
+				'</a>';
+			$cells['cut'] = $isL10nOverlay ? $this->spaceIcon : '<a href="#" onclick="' . htmlspecialchars('return jumpSelf(\'' . $this->clipObj->selUrlDB($table, $row['uid'], 0, ($isSel == 'cut'), array('returnUrl'=>'')) . '\');') . '" title="' . $GLOBALS['LANG']->sL('LLL:EXT:lang/locallang_core.php:cm.cut', TRUE) . '">' .
+				((!$isSel=='cut') ? t3lib_iconWorks::getSpriteIcon('actions-edit-cut') : t3lib_iconWorks::getSpriteIcon('actions-edit-cut-release')) .
+				'</a>';
+
+		} else {	// For the numeric clipboard pads (showing checkboxes where one can select elements on/off)
+
+			// Setting name of the element in ->CBnames array:
+			$n=$table.'|'.$row['uid'];
+			$this->CBnames[]=$n;
+
+			// Check if the current element is selected and if so, prepare to set the checkbox as selected:
+			$checked = ($this->clipObj->isSelected($table,$row['uid'])?' checked="checked"':'');
+
+			// If the "duplicateField" value is set then select all elements which are duplicates...
+			if ($this->duplicateField && isset($row[$this->duplicateField]))	{
+				$checked='';
+				if (in_array($row[$this->duplicateField], $this->duplicateStack))	{
+					$checked=' checked="checked"';
+				}
+				$this->duplicateStack[] = $row[$this->duplicateField];
+			}
+
+			// Adding the checkbox to the panel:
+			$cells['select'] = $isL10nOverlay ? $this->spaceIcon : '<input type="hidden" name="CBH['.$n.']" value="0" /><input type="checkbox" name="CBC['.$n.']" value="1" class="smallCheckboxes"'.$checked.' />';
+		}
+
+		// Now, looking for selected elements from the current table:
+		$elFromTable = $this->clipObj->elFromTable($table);
+		if (count($elFromTable) && $GLOBALS['TCA'][$table]['ctrl']['sortby']){
+
+			if (stripos(t3lib_div::getIndpEnv('SCRIPT_NAME'), 'ajax') === false) {
+				$pasteUrl = $this->clipObj->pasteUrl($table, -$row['uid']);
+			} else {
+				$pasteUrl = $this->pasteUrl($table, -$row['uid'], $row['pid']);
+			}
+
+			// IF elements are found and they can be individually ordered, then add a "paste after" icon:
+			$cells['pasteAfter'] = $isL10nOverlay ? $this->spaceIcon : '<a href="' . htmlspecialchars($pasteUrl) . '" onclick="' . htmlspecialchars('return '. $this->clipObj->confirmMsg($table, $row, 'after', $elFromTable)) . '" title="' . $GLOBALS['LANG']->getLL('clip_pasteAfter', TRUE) . '">' .
+				t3lib_iconWorks::getSpriteIcon('actions-document-paste-after') .
+				'</a>';
+		}
+
+		// Now, looking for elements in general:
+		$elFromTable = $this->clipObj->elFromTable('');
+		if ($table=='pages' && count($elFromTable))	{
+			$cells['pasteInto'] = '<a href="' . htmlspecialchars($this->clipObj->pasteUrl('', $row['uid'])) . '" onclick="' . htmlspecialchars('return ' . $this->clipObj->confirmMsg($table, $row, 'into', $elFromTable)) . '" title="' . $GLOBALS['LANG']->getLL('clip_pasteInto', TRUE) . '">' .
+				t3lib_iconWorks::getSpriteIcon('actions-document-paste-into') .
+				'</a>';
+		}
+
+		/*
+		 * @hook			makeClip: Allows to change clip-icons of records in list-module
+		 * @date			2007-11-20
+		 * @request		Bernhard Kraft  <krafbt@kraftb.at>
+		 * @usage		This hook method gets passed the current $cells array as third parameter. This array contains values for the clipboard icons generated for each record in Web>List. Each array entry is accessible by an index-key. The order of the icons is dependend on the order of those array entries.
+		 */
+		if(is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'])) {
+			foreach($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['actions'] as $classData) {
+				$hookObject = t3lib_div::getUserObj($classData);
+				if(!($hookObject instanceof localRecordList_actionsHook))	{
+					throw new UnexpectedValueException('$hookObject must implement interface localRecordList_actionsHook', 1195567845);
+				}
+				$cells = $hookObject->makeClip($table, $row, $cells, $this);
+			}
+		}
+
+		// Compile items into a DIV-element:
+		return '							<!-- CLIPBOARD PANEL: '.$table.':'.$row['uid'].' -->
+											<div class="typo3-clipCtrl">'.implode('',$cells).'</div>';
 	}
 
 	/**
@@ -865,9 +960,11 @@ class ux_localRecordList extends localRecordList {
 			$contentCollapseIcon = '&nbsp;';
 
 			if ($data['_EXPANDABLE_']) {
+				$sortField = t3lib_div::_GP('sortField') ? t3lib_div::_GP('sortField') . ':'  . (int)t3lib_div::_GP('sortRev') : '';
+
 				$contentCollapseIcon = '
 					<a href="javascript:GridElementsListView.elExpandCollapse(\'' .
-						$data['_EXPAND_ID_'] . '\', ' . $level . ')" title="' . $GLOBALS['LANG']->sL('LLL:EXT:gridelements/locallang_db.xml:list.collapseElement', TRUE) . '" rel="' . $data['_EXPAND_ID_'] . '">
+						$data['_EXPAND_ID_'] . '\',\'' . $sortField . '\', ' . $level . ')" title="' . $GLOBALS['LANG']->sL('LLL:EXT:gridelements/locallang_db.xml:list.collapseElement', TRUE) . '" rel="' . $data['_EXPAND_ID_'] . '">
 						<span class="t3-icon t3-icon-actions t3-icon-actions-view t3-icon-pagetree-collapse collapseIcon">&nbsp;</span>
 					</a>
 				';
@@ -967,6 +1064,26 @@ class ux_localRecordList extends localRecordList {
 		return $out;
 	}
 
+	/**
+	 * pasteUrl of the element (database and file)
+	 * For the meaning of $table and $uid, please read from ->makePasteCmdArray!!!
+	 * The URL will point to tce_file or tce_db depending in $table
+	 *
+	 * @param	string		Tablename (_FILE for files)
+	 * @param	mixed		"destination": can be positive or negative indicating how the paste is done (paste into / paste after)
+	 * @param	boolean		If set, then the redirect URL will point back to the current script, but with CB reset.
+	 * @return	string
+	 */
+	function pasteUrl($table, $uid, $pid, $setRedirect = 1) {
+		$rU = $this->backPath . ($table == '_FILE' ? 'tce_file.php' : 'tce_db.php') . '?' .
+			($setRedirect ? 'redirect=' . rawurlencode('mod.php?M=web_list&id=' . $pid) : '') .
+			'&vC=' . $GLOBALS['BE_USER']->veriCode() .
+			'&prErr=1&uPT=1' .
+			'&CB[paste]=' . rawurlencode($table . '|' . $uid) .
+			'&CB[pad]=normal' .
+			t3lib_BEfunc::getUrlToken('tceAction');
+		return $rU;
+	}
 }
 
 if (defined('TYPO3_MODE') && isset($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['XCLASS']['ext/gridelements/xclass/class.ux_db_list_extra.php'])) {

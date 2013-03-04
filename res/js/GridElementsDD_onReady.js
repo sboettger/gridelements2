@@ -35,7 +35,6 @@ if(typeof GridElementsDD === "undefined"){
 			var topLevelTDs = Ext.get(mainGrid).select('> tbody > tr > td');
 			Ext.each(topLevelTDs, function(topLevelTD){
 				Ext.get(topLevelTD).addClass('t3-gridTL');
-				alert(Ext.get(topLevelTD).el.dom.className);
 				//console.log(topLevelTD);
 				if(Ext.get(topLevelTD).el.dom === undefined || !Ext.get(topLevelTD).el.dom.className.match(/t3-allow-/)) {
 					Ext.get(topLevelTD).addClass('t3-allow-all');
