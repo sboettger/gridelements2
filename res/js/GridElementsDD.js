@@ -73,10 +73,10 @@ GridElementsDD = function() {
 				// get CType
 				if(dragEl.select('div.t3-page-ce-body div[class^=t3-ctype-]').elements.length){
 					// existing ce
-					top.elementCType = dragEl.select('div.t3-page-ce-body div[class^=t3-ctype-]').elements[0].className.substr(9);
+					top.elementCType = dragEl.select('div.t3-page-ce-body div[class^=t3-ctype-]').elements[0].className.substr(9).replace(/ t3-gridTLContainer/g, '');
 				}else{
 					// new ce
-					top.elementCType = dragEl.select('div[class^=t3-ctype-]').elements[0].className.substr(9);
+					top.elementCType = dragEl.select('div[class^=t3-ctype-]').elements[0].className.substr(9).replace(/ t3-gridTLContainer/g, '');
 				}
 
 				// always cache the original XY Coordinates of the element
@@ -158,9 +158,8 @@ GridElementsDD = function() {
 						var parentGridContainer = elNow.findParent('div.t3-gridContainer', 7);
 
 						if(elNow.select('.x-dd-droptargetarea').elements[0]){
-							//if(parentGridContainer){
 							if(elNow.findParent('td.t3-allow-all', 5) || elNow.findParent('td.t3-allow-'+top.elementCType, 5)){
-								if(top.isTopLevelOnly){
+								if(top.isTopLevelOnly && parentGridContainer){
 									if(elNow.findParent('td.t3-gridTL', 5)){
 										showDropTarget = true;
 									}
@@ -227,6 +226,8 @@ GridElementsDD = function() {
 
 				if(
 				// move node only if the drag element is not the same as the drop target
+					Ext.get(targetElId).hasClass('x-dd-showdroptarget')
+						&&
 					this.el.dom.id !== targetElId
 						&&
 						// cancel drops resulting in current position
@@ -364,7 +365,7 @@ GridElementsDD = function() {
 		this.invalidDrop = false;
 
 		// move node only if the drag element's parent is not the same as the drop target
-		if(this.el.dom.parentNode.id != targetElId) {
+		if(this.el.dom.parentNode.id != targetElId && Ext.get(targetElId).hasClass('x-dd-showdroptarget')) {
 
 			// clone template element
 			var newContentEl = Ext.get(this.el).dom.cloneNode(true);
@@ -522,6 +523,32 @@ GridElementsDD = function() {
 				this.baseConf.pageRenderTime = null;
 			}
 
+			// this is called when you click an item in the content selection wizard (popup)
+			// yes, this one has to be a global!
+			window.setFormValueFromBrowseWin = function(colPosUidPid, tableUid, headerText){
+
+				top.elementUID = tableUid.replace(/tt_content_/g, '');
+				top.targetUID = colPosUidPid;
+
+				// Ajax timeout should match the server timeout
+				Ext.Ajax.timeout = 60000;
+
+				var
+					actionURL = '',
+					ctrlPressed = true;
+
+				actionURL = top.copyURL.replace(/DD_DRAG_UID/g, top.elementUID);
+				actionURL = actionURL.replace(/DD_DROP_UID/g, top.targetUID);
+				actionURL = actionURL.replace('../../../', top.TS.PATH_typo3);
+
+				// we don't need the redirect URL, since we will do a reload after the Ajax action
+				// so a redirect within the Ajax action would be too much server load here
+				actionURL = actionURL.replace('&redirect=1', '');
+
+				GridElementsDD.doCmdAction(actionURL, ctrlPressed);
+
+			}
+
 			// make elements draggable
 			Ext.each(Ext.select('.x-dd-makemedrag').elements, function(elementNow) {
 
@@ -563,31 +590,6 @@ GridElementsDD = function() {
 					}
 				}
 
-				// this is called when you click an item in the content selection wizard (popup)
-				// yes, this one has to be a global!
-				window.setFormValueFromBrowseWin = function(colPosUidPid, tableUid, headerText){
-
-					top.elementUID = tableUid.replace(/tt_content_/g, '');
-					top.targetUID = colPosUidPid;
-
-					// Ajax timeout should match the server timeout
-					Ext.Ajax.timeout = 60000;
-
-					var
-						actionURL = '',
-						ctrlPressed = true;
-
-					actionURL = top.copyURL.replace(/DD_DRAG_UID/g, top.elementUID);
-					actionURL = actionURL.replace(/DD_DROP_UID/g, top.targetUID);
-					actionURL = actionURL.replace('../../../', top.TS.PATH_typo3);
-
-					// we don't need the redirect URL, since we will do a reload after the Ajax action
-					// so a redirect within the Ajax action would be too much server load here
-					actionURL = actionURL.replace('&redirect=1', '');
-
-					GridElementsDD.doCmdAction(actionURL, ctrlPressed);
-
-				}
 			});
 
 			// add draggers for icons with class x-dd-makedragger: <div class="x-dd-droptargetgroup" style="left: 100px; top: 100px;"></div>

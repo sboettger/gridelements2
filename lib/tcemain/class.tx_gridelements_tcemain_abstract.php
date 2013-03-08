@@ -76,16 +76,6 @@ class tx_gridelements_tcemain_abstract {
 	}
 
 	/**
-	 * inject beFunc
-	 *
-	 * @param wrapperForT3libBeFunc $beFunc
-	 * @return void
-	 */
-	public function injectBeFunc(wrapperForT3libBeFunc $beFunc) {
-		$this->beFunc = $beFunc;
-	}
-
-	/**
 	 * initializes this class
 	 *
 	 * @param   string $table: The name of the table the data should be saved to
@@ -101,9 +91,6 @@ class tx_gridelements_tcemain_abstract {
 			$this->injectLayoutSetup(
 				t3lib_div::makeInstance('tx_gridelements_layoutsetup')->init($pageUid)
 			);
-		}
-		if (!$this->beFunc instanceof wrapperForT3libBeFunc) {
-			$this->injectBeFunc(t3lib_div::makeInstance('wrapperForT3libBeFunc'));
 		}
 		if (!$this->tceForms instanceof t3lib_TCEForms) {
 			$this->injectTceForms(t3lib_div::makeInstance('t3lib_TCEForms'));

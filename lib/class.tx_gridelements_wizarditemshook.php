@@ -53,15 +53,6 @@ class tx_gridelements_wizardItemsHook implements cms_newContentElementWizardsHoo
 	}
 
 	/**
-	 * inject BE func
-	 *
-	 * @param t3lib_BEfunc $beFunc
-	 */
-	public function injectBeFunc(t3lib_BEfunc $beFunc) {
-		$this->beFunc = $beFunc;
-	}
-
-	/**
 	 * initializes this class
 	 *
 	 * @param type $pageUid
@@ -69,9 +60,6 @@ class tx_gridelements_wizardItemsHook implements cms_newContentElementWizardsHoo
 	public function init($pageUid) {
 		if (!$this->layoutSetup instanceof tx_gridelements_layoutsetup) {
 			$this->layoutSetup = t3lib_div::makeInstance('tx_gridelements_layoutsetup')->init($pageUid);
-		}
-		if (!$this->beFunc instanceof t3lib_BEfunc) {
-			$this->beFunc = t3lib_div::makeInstance('t3lib_BEfunc');
 		}
 	}
 

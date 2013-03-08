@@ -185,24 +185,35 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 	 */
 
 	public function extractDefaultDataFromDataStructure($dataStructure) {
+		$returnXML = '';
+		$sheetArray = array();
 		if($dataStructure) {
 			$structureArray = t3lib_div::xml2array($dataStructure);
-			foreach($structureArray['sheets'] as $sheetName => $sheet) {
-				if(is_array($sheet['ROOT']['el']) && count($sheet['ROOT']['el']) > 0) {
-					$elArray = array();
-					foreach($sheet['ROOT']['el'] as $elName => $elConf) {
-						$config = $elConf['TCEforms']['config'];
-						$elArray[$elName]['vDEF'] = $config['default'];
-						if(!$elArray[$elName]['vDEF'] && $config['type'] == 'select' && count($config['items']) > 0) {
-							$elArray[$elName]['vDEF'] = $config['items'][0][1];
+			if(!isset($structureArray['sheets']) && isset($structureArray['ROOT'])) {
+				$structureArray['sheets']['sDEF']['ROOT'] = $structureArray['ROOT'];
+				unset($structureArray['ROOT']);
+			}
+			if(isset($structureArray['sheets']) && count($structureArray['sheets']) > 0) {
+				foreach($structureArray['sheets'] as $sheetName => $sheet) {
+					if(is_array($sheet['ROOT']['el']) && count($sheet['ROOT']['el']) > 0) {
+						$elArray = array();
+						foreach($sheet['ROOT']['el'] as $elName => $elConf) {
+							$config = $elConf['TCEforms']['config'];
+							$elArray[$elName]['vDEF'] = $config['default'];
+							if(!$elArray[$elName]['vDEF'] && $config['type'] == 'select' && count($config['items']) > 0) {
+								$elArray[$elName]['vDEF'] = $config['items'][0][1];
+							}
 						}
+						$sheetArray['data'][$sheetName]['lDEF'] = $elArray;
 					}
-					$sheetArray['data'][$sheetName]['lDEF'] = $elArray;
-				}
-			};
-			$flexformTools = t3lib_div::makeInstance('t3lib_flexformtools');
-			return $flexformTools->flexArray2Xml($sheetArray, true);
+				};
+			}
+			if(count($sheetArray) > 0) {
+				$flexformTools = t3lib_div::makeInstance('t3lib_flexformtools');
+				$returnXML = $flexformTools->flexArray2Xml($sheetArray, true);
+			}
 		}
+		return $returnXML;
 	}
 
 	/**
@@ -382,7 +393,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 		}
 
 		if ($this->getTable() == 'pages') {
-			$rootline = $this->beFunc->BEgetRootLine($this->getPageUid());
+			$rootline = t3lib_BEfunc::BEgetRootLine($this->getPageUid());
 			for ($i = count($rootline); $i > 0; $i--) {
 				$page = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 					'uid, backend_layout, backend_layout_next_level',
@@ -614,7 +625,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 			$tcaColumns = $this->layoutSetup->getLayoutColumns($layout);
 			$tcaColumns = $tcaColumns['CSV'];
 		} else if ($table == 'pages') {
-			$tsConfig = $this->beFunc->getModTSconfig($id, 'TCEFORM.tt_content.colPos');
+			$tsConfig = t3lib_BEfunc::getModTSconfig($id, 'TCEFORM.tt_content.colPos');
 			$tcaConfig = $GLOBALS['TCA']['tt_content']['columns']['colPos']['config'];
 
 			$tcaColumns = $tcaConfig['items'];
