@@ -30,14 +30,14 @@ class tx_gridelements_drawItemHook implements tx_cms_layout_tt_content_drawItemH
 	 * Processes the item to be rendered before the actual example content gets rendered
 	 * Deactivates the original example content output
 	 *
-	 * @param tx_cms_layout     $parentObject: The parent object that triggered this hook
+	 * @param \TYPO3\CMS\Backend\View\PageLayoutView     $parentObject: The parent object that triggered this hook
 	 * @param boolean           $drawItem: A switch to tell the parent object, if the item still must be drawn
 	 * @param string            $headerContent: The content of the item header
 	 * @param string            $itemContent: The content of the item itself
 	 * @param array             $row: The current data row for this item
 	 * @return	void
 	 */
-	public function preProcess(tx_cms_layout &$parentObject, &$drawItem, &$headerContent, &$itemContent, array &$row) {
+	public function preProcess(\TYPO3\CMS\Backend\View\PageLayoutView &$parentObject, &$drawItem, &$headerContent, &$itemContent, array &$row) {
 		if ($row['CType']) {
 			$showHidden = $parentObject->tt_contentConfig['showHidden'] ? '' : t3lib_BEfunc::BEenableFields('tt_content');
 			$deleteClause = t3lib_BEfunc::deleteClause('tt_content');

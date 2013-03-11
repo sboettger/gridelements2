@@ -393,7 +393,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 		}
 
 		if ($this->getTable() == 'pages') {
-			$rootline = t3lib_BEfunc::BEgetRootLine($this->getPageUid());
+			$rootline = $this->beFunc->BEgetRootLine($this->getPageUid());
 			for ($i = count($rootline); $i > 0; $i--) {
 				$page = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow(
 					'uid, backend_layout, backend_layout_next_level',
@@ -625,7 +625,7 @@ class tx_gridelements_tcemain_preProcessFieldArray extends tx_gridelements_tcema
 			$tcaColumns = $this->layoutSetup->getLayoutColumns($layout);
 			$tcaColumns = $tcaColumns['CSV'];
 		} else if ($table == 'pages') {
-			$tsConfig = t3lib_BEfunc::getModTSconfig($id, 'TCEFORM.tt_content.colPos');
+			$tsConfig = $this->beFunc->getModTSconfig($id, 'TCEFORM.tt_content.colPos');
 			$tcaConfig = $GLOBALS['TCA']['tt_content']['columns']['colPos']['config'];
 
 			$tcaColumns = $tcaConfig['items'];

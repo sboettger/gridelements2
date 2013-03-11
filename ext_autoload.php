@@ -20,7 +20,7 @@ return array(
 	'tx_gridelements_wizarditemshook'					=> $extensionPath . 'lib/class.tx_gridelements_wizarditemshook.php',
 	'tx_gridelements_helper'							=> $extensionPath . 'lib/class.tx_gridelements_helper.php',
 	'tx_gridelements_view'								=> $extensionPath . 'view/class.tx_gridelements_view.php',
-	'wrapperfort3libbefunc'								=> $extensionPath . 'Tests/wrapperForT3libBeFunc.php',
+	'wrapperfort3libbefunc'								=> $extensionPath . 'lib/wrapperForT3libBeFunc.php',
 
 	// hooks
 	'tx_gridelements_pagerendererhook'					=> $extensionPath . 'hooks/class.tx_gridelements_pagerendererhook.php',

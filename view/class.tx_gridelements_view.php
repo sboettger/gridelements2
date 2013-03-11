@@ -448,7 +448,12 @@ class tx_gridelements_view extends tslib_cObj {
 
 		$tempArr=$sheetArray;
 		foreach($fieldNameArr as $k => $v)	{
-			if (t3lib_utility_Math::canBeInterpretedAsInteger($v))	{
+			if(t3lib_div::compat_version('4.6')) {
+				$checkedValue = t3lib_utility_Math::canBeInterpretedAsInteger($v);
+			} else {
+				$checkedValue = t3lib_div::testInt($v);
+			}
+			if ($checkedValue)	{
 				if (is_array($tempArr))	{
 					$c=0;
 					foreach($tempArr as $values)	{

@@ -4,6 +4,7 @@
  * 
  * - FEATURE: reload-less DnD: compare page lastchange to current page "age" on ajax (pageRenderTime inserted by onReady injector)
  */
+
 GridElementsDD = function() {
 	var
 	// set when initAll() has finished
@@ -56,8 +57,8 @@ GridElementsDD = function() {
 
 				// is this a new or an existing element?
 				var dragEl = Ext.get(this.el);
-				if(dragEl.select('div.t3-page-ce-type a span').elements.length > 0) {
-					top.elementUID = dragEl.select('div.t3-page-ce-type a span').elements[0].getAttribute('title').replace('id=', '').match(/^(\d)+/g);
+				if(dragEl.select('span.ce-icons-left a span').elements.length > 0) {
+					top.elementUID = dragEl.select('span.ce-icons-left a span').elements[0].getAttribute('title').replace('id=', '').match(/^(\d)+/g);
 
 					var currentSpacer = document.createElement('div');
 					Ext.get(currentSpacer).addClass('t3-dd-spacer');
@@ -579,7 +580,10 @@ GridElementsDD = function() {
 						});
 
 						// restrict drag handle to h4 within
-						dragElementNow.setHandleElId(Ext.get(extElNow.select('h4').elements[0]).id);
+						var handleEl = Ext.get(extElNow.select('h4').elements[0]);
+						if(handleEl) {
+							dragElementNow.setHandleElId(handleEl.id);
+						}
 
 						// apply the overrides object to the newly created instance of DD
 						dragBehaviorDragelements.dragClass = matchingClass;

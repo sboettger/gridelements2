@@ -7,6 +7,12 @@ if(typeof GridElementsDD === "undefined"){
 	top.geSprites = {};
 	top.backPath = '';
 
+	top.TYPO3.Components.PageModule = {
+		enableDragDrop: function() {
+			return true;
+		}
+	}
+
 	if(Ext.get('ext-cms-layout-db-layout-php')) {
 
 		// add action for show/hide gridColumn contents
@@ -72,8 +78,12 @@ if(typeof GridElementsDD === "undefined"){
 		var contentElements = Ext.select('.t3-page-ce').elements;
 		Ext.each(contentElements, function(contentElement){
 			Ext.get(contentElement).addListener('mouseenter', function(e, t){
-				this.select('> .t3-page-ce-header').first().addClass('t3-page-ce-header-active');
-				this.select('> .t3-page-ce-body').first().addClass('t3-page-ce-body-active');
+				if(this.select('> .t3-page-ce-header').first()) {
+					this.select('> .t3-page-ce-header').first().addClass('t3-page-ce-header-active');
+				}
+				if(this.select('> .t3-page-ce-body').first()) {
+					this.select('> .t3-page-ce-body').first().addClass('t3-page-ce-body-active');
+				}
 
 				var gridTable = this.select('> .t3-page-ce-body table.t3-gridTable').first();
 				if(gridTable){
@@ -81,8 +91,12 @@ if(typeof GridElementsDD === "undefined"){
 				}
 			});
 			Ext.get(contentElement).addListener('mouseleave', function(e, t){
-				this.select('> .t3-page-ce-header').first().removeClass('t3-page-ce-header-active');
-				this.select('> .t3-page-ce-body').first().removeClass('t3-page-ce-body-active');
+				if(this.select('> .t3-page-ce-header').first()) {
+					this.select('> .t3-page-ce-header').first().removeClass('t3-page-ce-header-active');
+				}
+				if(this.select('> .t3-page-ce-body').first()) {
+					this.select('> .t3-page-ce-body').first().removeClass('t3-page-ce-body-active');
+				}
 
 				var gridTable = this.select('> .t3-page-ce-body table.t3-gridTable').first();
 				if(gridTable){
@@ -123,7 +137,7 @@ if(typeof GridElementsDD === "undefined"){
 		// add dropzones within .t3-page-ce existing elements
 		var dropZoneEl = Ext.select('.t3-page-ce .t3-page-ce-body').elements;
 		Ext.each(dropZoneEl, function(currentElement){
-			var dropZoneID = Ext.get(currentElement).select('div.t3-page-ce-type span').elements[0].getAttribute('title');
+			var dropZoneID = Ext.get(currentElement).parent().select('.t3-page-ce-header span a span').elements[0].getAttribute('title');
 			var currentDropZone = document.createElement('div');
 			currentDropZone.innerHTML = dropZoneTpl;
 			Ext.get(currentDropZone).select('div.x-dd-droptargetarea').set({title: dropZoneID});
@@ -143,7 +157,7 @@ if(typeof GridElementsDD === "undefined"){
 		firstNewIconContainer = Ext.get('typo3-docheader-row1');
 
 		// get link around the "new content element" icon and if there is one do the magic
-		if(firstNewIconContainer.select('.t3-icon-document-new').elements[0] !== undefined) {
+		if(firstNewIconContainer && firstNewIconContainer.select('.t3-icon-document-new').elements[0] !== undefined) {
 
 				var
 					// create container for content draggables
